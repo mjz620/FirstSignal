@@ -115,7 +115,7 @@ export default function FlowField() {
 
     const frame = () => {
       ctx.globalCompositeOperation = "source-over";
-      ctx.fillStyle = "#05070e";
+      ctx.fillStyle = "#0a1120";
       ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = "lighter";
       t += 0.0018;
@@ -126,7 +126,7 @@ export default function FlowField() {
     resize();
 
     if (reduce) {
-      ctx.fillStyle = "#05070e";
+      ctx.fillStyle = "#0a1120";
       ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = "lighter";
       for (let i = 0; i < TAIL + 40; i++) { t += 0.0018; for (const p of parts) advance(p); }

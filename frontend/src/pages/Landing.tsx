@@ -63,7 +63,7 @@ export default function Landing({ onEnter }: { onEnter: () => void }) {
         </header>
 
         <section className="landing-hero">
-          <h1 className="landing-h1">A $100K decision, in 24 hours,<br />with every number traceable.</h1>
+          <h1 className="landing-h1">A $100K decision, in 24 hours,<br />with <em>every number traceable.</em></h1>
           <p className="landing-sub">
             An evidence-first sourcing and diligence engine. Every claim carries a
             Trust Score and a link to its source; every score on every page shows

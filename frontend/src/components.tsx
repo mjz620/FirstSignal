@@ -431,7 +431,11 @@ export function Memo({ md, onCite }: { md: string; onCite: (id: string) => void 
         if (t.startsWith("- ") || t.startsWith("* "))
           return <li key={i}>{inline(t.slice(2), onCite)}</li>;
         const ol = t.match(/^(\d{1,2})\.\s+(.*)/);  // ordered list: "1. …"
-        if (ol) return <div key={i} className="memo-oli"><b>{ol[1]}.</b> {inline(ol[2], onCite)}</div>;
+        if (ol) return (
+          <div key={i} className="memo-oli">
+            <b>{ol[1]}.</b><span className="memo-oli-body">{inline(ol[2], onCite)}</span>
+          </div>
+        );
         if (!t) return <div key={i} className="sp" />;
         return <p key={i}>{inline(t, onCite)}</p>;
       })}
