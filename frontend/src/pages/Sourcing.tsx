@@ -22,6 +22,7 @@ export default function Sourcing({ thesis, openFounder, openMemo }:
   const [outreach, setOutreach] = useState<{ fid: string; draft: Outreach } | null>(null);
   const [drafting, setDrafting] = useState<string | null>(null);
   const [prevIds, setPrevIds] = useState<Set<string> | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const load = useCallback(() => {
     api.getSourcing(thesis).then(setFeed).catch((e) => setErr(e.message));
@@ -67,7 +68,8 @@ export default function Sourcing({ thesis, openFounder, openMemo }:
         </p>
       </div>
 
-      <div className="section-h"><h2>Channel yield — sourcing graph</h2></div>
+      <div className="section-h"><h2>Channel yield — sourcing graph</h2>
+        <span className="count">signals scanned → resolved to founders → screened</span></div>
       <ScanNow thesis={thesis} sources={feed?.scan_sources ?? []} onDone={onScanDone} />
       {channels.length === 0 ? <Skeleton lines={2} /> : (
         <div className="chan-row">
@@ -88,8 +90,14 @@ export default function Sourcing({ thesis, openFounder, openMemo }:
 
       <div className="twocol">
         <div>
-          <div className="section-h"><h2>Outbound — ranked by thesis fit</h2>
-            <span className="count">{feed ? `${feed.founders.length} resolved founders` : ""}</span>
+          <div className="section-h"><h2>Outbound — ranked by Founder Score</h2>
+            <span className="count">
+              {feed ? `${Math.min(showAll ? feed.founders.length : 25, feed.founders.length)} of ${feed.founders.length} resolved founders` : ""}
+              {feed && feed.founders.length > 25 && (
+                <> · <button className="linkbtn" onClick={() => setShowAll((v) => !v)}>
+                  {showAll ? "show top 25" : "show all"}</button></>
+              )}
+            </span>
           </div>
           {err && <Err msg={err} />}
           {!feed && !err && <Skeleton lines={8} />}
@@ -101,10 +109,10 @@ export default function Sourcing({ thesis, openFounder, openMemo }:
             <div className="tablewrap">
             <table className="funnel">
               <thead>
-                <tr><th>Founder</th><th>Channels</th><th>Fit</th><th>Signal <InfoTip kind="signal" /> / Cov <InfoTip kind="coverage" /></th><th></th></tr>
+                <tr><th>Founder</th><th>Channels</th><th>Thesis match</th><th>Signal <InfoTip kind="signal" /> / Cov <InfoTip kind="coverage" /></th><th></th></tr>
               </thead>
               <tbody>
-                {feed.founders.slice(0, 25).map((f) => (
+                {(showAll ? feed.founders : feed.founders.slice(0, 25)).map((f) => (
                   <tr key={f.id}>
                     <td className="fname">
                       {f.screened ? (

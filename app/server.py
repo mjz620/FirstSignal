@@ -746,15 +746,17 @@ def ask_memo(founder_id: str, body: AskBody, request: Request):
 
 
 @app.get("/api/killed")
-def killed():
+def killed(thesis: str | None = None):
     conn = _conn()
+    t = _thesis(thesis)
     # One row per founder, carrying their LATEST kill reason. A bare `GROUP BY
     # founder_id` selecting an ungrouped `reason` is legal in SQLite but Postgres
     # rejects it, so this endpoint 500'd in deploy while the tests (SQLite) passed.
     rows = conn.execute(
         "SELECT DISTINCT k.founder_id, "
         "(SELECT reason FROM kill_log k2 WHERE k2.founder_id = k.founder_id "
-        "ORDER BY logged_at DESC LIMIT 1) reason FROM kill_log k").fetchall()
+        "AND k2.thesis = ? ORDER BY logged_at DESC LIMIT 1) reason "
+        "FROM kill_log k WHERE k.thesis = ?", (t.name, t.name)).fetchall()
     return [{"id": r["founder_id"], "reason": r["reason"]} for r in rows]
 
 

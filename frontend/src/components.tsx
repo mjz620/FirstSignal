@@ -2,12 +2,15 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import * as api from "./api";
 import type { FounderSummary, Methodology, ScorePoint, Trace } from "./api";
 
-export const TREND: Record<string, string> = { improving: "↑", declining: "↓", stable: "→", new: "✦" };
+export const TREND: Record<string, string> = { improving: "↑", declining: "↓", stable: "→" };
 /* A screen reader announces a bare Unicode arrow as "upwards arrow", not "improving" —
-   wrap every TREND glyph render in this so the word is always available to AT. */
+   wrap every TREND glyph render in this so the word is always available to AT.
+   "new" (one score on record, no trend yet) is written as the word: a glyph for it
+   reads like a rating. */
 export function TrendGlyph({ trend }: { trend?: string }) {
   const t = trend || "new";
-  return <span aria-label={t}>{TREND[t]}</span>;
+  if (!TREND[t]) return <span className="trend-new" title="first score — no trend yet">new</span>;
+  return <span aria-label={t} title={t}>{TREND[t]}</span>;
 }
 export const AXES = ["founder", "market", "idea"] as const;
 export const AXLABEL: Record<string, string> = { founder: "Founder", market: "Market", idea: "Idea vs Mkt" };
@@ -27,9 +30,10 @@ export function tierClass(t?: string): string {
   if (t === "contradicted") return "tier-contra";
   return "tier-inferred";
 }
+/* One tier vocabulary on every surface — the same words the memo prints. */
 export const TIER_SHORT: Record<string, string> = {
-  corroborated: "corr", single_source: "single", self_reported: "self",
-  contradicted: "CONTRA", inferred: "inferred",
+  corroborated: "corroborated", single_source: "single-source", self_reported: "self-reported",
+  contradicted: "contradicted", inferred: "inferred",
 };
 export function TierChip({ tier, trust }: { tier: string; trust?: number }) {
   return (
@@ -152,7 +156,7 @@ function InfoTipBody({ kind, axis, m }: { kind: InfoKind; axis?: string; m: Meth
     return (
       <>
         <InfoTipBody kind="signal" m={m} />
-        <p className="it-p"><b>F-Score = Founder Score</b>, the same value as the Signal
+        <p className="it-p">This is the <b>Founder Score</b>, the same value as the Signal
           meter. The sparkline beside it is the append-only history: one point per
           re-score, hover a point for the event that triggered it. Memory never
           overwrites a past score, so improvement shows up as a trend rather than a
@@ -393,25 +397,52 @@ export function Meters({ signal, coverage, founderId }: {
 /* ---- click-to-evidence memo (multi-id brackets become one chip per id) --- */
 const BRACKET = /\[([^\]]*\b[a-z]{2,5}-\d{1,3}\b[^\]]*)\]/g;
 const ID = /\b([a-z]{2,5}-\d{1,3})\b/g;
-export function inline(text: string, onCite: (id: string) => void): ReactNode[] {
+/* A memo citation is "[team-01 · 0.10 · contradicted]" in the markdown. Rendered,
+   it is a small tier-coloured chip carrying only the id — trust and tier live in the
+   tooltip and in the trace rail one click away — so the serif prose stays readable.
+   Adjacent groups ("[a, b] [b] [c]") merge into one run with each id cited once. */
+function parseCite(seg: string, id: string): { trust?: string; tier?: string } {
+  const parts = seg.split("·").map((p) => p.trim());
+  if (parts.length >= 3) return { trust: parts[1], tier: parts[2] };
+  if (parts.length === 2) return { trust: parts[1] };
+  void id;
+  return {};
+}
+export function inline(text: string, onCite: (id: string) => void,
+  tiers?: Map<string, string>): ReactNode[] {
   const out: ReactNode[] = [];
   let last = 0, m: RegExpExecArray | null, k = 0;
   BRACKET.lastIndex = 0;
-  while ((m = BRACKET.exec(text))) {
-    if (m.index > last) out.push(bold(text.slice(last, m.index), k++));
-    const ids = [...m[1].matchAll(ID)].map((x) => x[1]);
-    const segs = m[1].split(";");
+  let group: { id: string; trust?: string; tier?: string }[] = [];
+  const flush = () => {
+    if (!group.length) return;
+    const seen = new Set<string>();
+    const uniq = group.filter((c) => !seen.has(c.id) && seen.add(c.id));
     out.push(
       <span key={k++} className="citegroup">
-        {ids.map((id, i) => (
-          <button key={id + i} className="cite" onClick={() => onCite(id)}>
-            [{(segs[i] || id).trim()}]
+        {uniq.map((c) => (
+          <button key={c.id} className={`cite ${tierClass(c.tier)}`} onClick={() => onCite(c.id)}
+            title={`${c.id}${c.trust ? ` · trust ${c.trust}` : ""}${c.tier ? ` · ${c.tier.replace(/_/g, " ")}` : ""} — open trace`}>
+            {c.id}
           </button>
         ))}
       </span>,
     );
+    group = [];
+  };
+  while ((m = BRACKET.exec(text))) {
+    const between = text.slice(last, m.index);
+    if (between.trim() !== "") { flush(); out.push(bold(between, k++)); }
+    else if (between && !group.length) out.push(bold(between, k++));
+    const segs = m[1].split(";");
+    for (const seg of segs) {
+      const ids = [...seg.matchAll(ID)].map((x) => x[1]);
+      const meta = ids.length === 1 ? parseCite(seg, ids[0]) : {};
+      for (const id of ids) group.push({ id, tier: tiers?.get(id), ...meta });
+    }
     last = m.index + m[0].length;
   }
+  flush();
   if (last < text.length) out.push(bold(text.slice(last), k++));
   return out;
 }
@@ -420,24 +451,27 @@ function bold(t: string, key: number): ReactNode {
   return <span key={key}>{parts.map((p, i) => (i % 2 ? <strong key={i}>{p}</strong> : p))}</span>;
 }
 
-export function Memo({ md, onCite }: { md: string; onCite: (id: string) => void }) {
+export function Memo({ md, onCite, tiers }: {
+  md: string; onCite: (id: string) => void; tiers?: Map<string, string>;
+}) {
+  const cite = (t: string) => inline(t, onCite, tiers);
   return (
     <div className="memo">
       {md.split("\n").map((line, i) => {
         const t = line.trimEnd();
-        if (t.startsWith("## ")) return <h2 key={i}>{inline(t.slice(3), onCite)}</h2>;
-        if (t.startsWith("# ")) return <h2 key={i}>{inline(t.slice(2), onCite)}</h2>;
-        if (t.startsWith("### ")) return <h3 key={i}>{inline(t.slice(4), onCite)}</h3>;
+        if (t.startsWith("## ")) return <h2 key={i}>{cite(t.slice(3))}</h2>;
+        if (t.startsWith("# ")) return <h2 key={i}>{cite(t.slice(2))}</h2>;
+        if (t.startsWith("### ")) return <h3 key={i}>{cite(t.slice(4))}</h3>;
         if (t.startsWith("- ") || t.startsWith("* "))
-          return <li key={i}>{inline(t.slice(2), onCite)}</li>;
+          return <li key={i}>{cite(t.slice(2))}</li>;
         const ol = t.match(/^(\d{1,2})\.\s+(.*)/);  // ordered list: "1. …"
         if (ol) return (
           <div key={i} className="memo-oli">
-            <b>{ol[1]}.</b><span className="memo-oli-body">{inline(ol[2], onCite)}</span>
+            <b>{ol[1]}.</b><span className="memo-oli-body">{cite(ol[2])}</span>
           </div>
         );
         if (!t) return <div key={i} className="sp" />;
-        return <p key={i}>{inline(t, onCite)}</p>;
+        return <p key={i}>{cite(t)}</p>;
       })}
     </div>
   );
@@ -483,37 +517,6 @@ export function TracePanel({ founderId, claimId, onClose }:
           </div>
           <p className="ev-text">{trace.claim.text}</p>
 
-          <div className="ev-label">Evidence</div>
-          <div className="srccard">
-            <div className="src-top">
-              <DomainChip url={trace.claim.evidence_url} />
-              {trace.claim.retrieved_at && (
-                <span className="src-date">retrieved {trace.claim.retrieved_at.slice(0, 10)}</span>
-              )}
-            </div>
-            {trace.claim.evidence_title && (
-              <div className="src-title">{trace.claim.evidence_title}</div>
-            )}
-            {trace.claim.evidence_excerpt
-              ? <blockquote className="src-quote">“{trace.claim.evidence_excerpt}”</blockquote>
-              : <p className="ev-snip" style={{ margin: "6px 0 0" }}>{trace.claim.evidence}</p>}
-          </div>
-
-          <div className="ev-label">Source signal{trace.signals.length === 1 ? "" : "s"}</div>
-          {trace.signals.length === 0 && (
-            <p className="ev-snip">
-              no raw signal on record — the source card above is the whole provenance
-            </p>
-          )}
-          {trace.signals.map((s) => (
-            <div key={s.id} className="tr-signal">
-              <span className="src">{s.source}</span>
-              <span className="tr-date">{(s.observed_at || s.ingested_at).slice(0, 10)}</span>
-              <p className="ev-snip">{s.content.length > 220 ? s.content.slice(0, 220) + "…" : s.content}</p>
-              <a className="ev-src" href={s.source_url} target="_blank" rel="noreferrer">{s.source_url}</a>
-            </div>
-          ))}
-
           <div className="ev-label">How trust was set <InfoTip kind="trust" /></div>
           {trace.adjudication ? (
             <div className="tr-adj">
@@ -539,13 +542,118 @@ export function TracePanel({ founderId, claimId, onClose }:
             </div>
           ) : (
             <p className="ev-snip">
-              rubric-anchored: tier "{trace.claim.corroboration}" → trust {trace.claim.trust.toFixed(2)}
+              rubric-anchored: tier "{trace.claim.corroboration.replace(/_/g, " ")}" → trust {trace.claim.trust.toFixed(2)}
               {" "}(uncontested — no adjudication needed)
             </p>
           )}
+
+          <div className="ev-label">Evidence</div>
+          <div className="srccard">
+            <div className="src-top">
+              <DomainChip url={trace.claim.evidence_url} />
+              {trace.claim.retrieved_at && (
+                <span className="src-date">retrieved {trace.claim.retrieved_at.slice(0, 10)}</span>
+              )}
+            </div>
+            {/* title, excerpt and raw signal are often the same sentence three times —
+                show each only where it adds something the previous line didn't */}
+            {trace.claim.evidence_title && !sameText(trace.claim.evidence_excerpt, trace.claim.evidence_title) && (
+              <div className="src-title">{trace.claim.evidence_title}</div>
+            )}
+            {trace.claim.evidence_excerpt
+              ? <blockquote className="src-quote">“{trace.claim.evidence_excerpt}”</blockquote>
+              : <p className="ev-snip" style={{ margin: "6px 0 0" }}>{trace.claim.evidence}</p>}
+          </div>
+
+          <div className="ev-label">Source signal{trace.signals.length === 1 ? "" : "s"}</div>
+          {trace.signals.length === 0 && (
+            <p className="ev-snip">
+              no raw signal on record — the source card above is the whole provenance
+            </p>
+          )}
+          {trace.signals.map((s) => (
+            <div key={s.id} className="tr-signal">
+              <span className="src">{s.source}</span>
+              <span className="tr-date">{(s.observed_at || s.ingested_at).slice(0, 10)}</span>
+              {!sameText(trace.claim.evidence_excerpt, s.content) && (
+                <p className="ev-snip">{s.content.length > 220 ? s.content.slice(0, 220) + "…" : s.content}</p>
+              )}
+              <a className="ev-src" href={s.source_url} target="_blank" rel="noreferrer">{s.source_url}</a>
+            </div>
+          ))}
         </>
       )}
     </aside>
+  );
+}
+
+/* Two evidence strings are "the same" when one opens with the other's first
+   80 characters — the title/excerpt/signal triplet is usually one sentence. */
+function sameText(a?: string | null, b?: string | null): boolean {
+  if (!a || !b) return false;
+  const n = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase();
+  const x = n(a), y = n(b);
+  return x.startsWith(y.slice(0, 80)) || y.startsWith(x.slice(0, 80));
+}
+
+/* ---- one claim row, used by the ledger, the spotlight and the decision card --- */
+export function ClaimRow({ c, active, onClick }: {
+  c: { id: string; text: string; trust: number; corroboration: string; axis: string };
+  active: boolean; onClick: () => void;
+}) {
+  return (
+    <button className={`claimrow ${active ? "active" : ""}`} onClick={onClick}
+      aria-label={`${c.id}, ${c.corroboration} — open full trace`}>
+      <span className="cr-id">{c.id}</span>
+      <TierChip tier={c.corroboration} trust={c.trust} />
+      <span className="cr-axis">{c.axis}</span>
+      <span className="cr-text">{c.text}</span>
+    </button>
+  );
+}
+
+/* Adjudication verdict one-liner, fetched only when the claim is clicked
+   (shared trace cache — the panel and this line cost one request total). */
+export function VerdictLine({ founderId, claimId }: { founderId: string; claimId: string }) {
+  const [trace, setTrace] = useState<Trace | null>(null);
+  useEffect(() => {
+    let live = true;
+    setTrace(null);
+    api.getTraceCached(founderId, claimId).then((t) => { if (live) setTrace(t); }).catch(() => {});
+    return () => { live = false; };
+  }, [founderId, claimId]);
+  if (!trace) return <div className="claim-verdict">…</div>;
+  if (!trace.adjudication) return <div className="claim-verdict">uncontested — rubric-anchored, no debate needed</div>;
+  return (
+    <div className="claim-verdict">
+      judge: trust <b>{trace.rubric_trust.toFixed(2)} → {trace.adjudication.trust.toFixed(2)}</b>
+      {" — "}{trace.adjudication.rationale}
+    </div>
+  );
+}
+
+/* Contradicted claims, pinned first on both Diligence and Decision. */
+export function ContradictionSpotlight({ founderId, claims, total, traceId, onOpen }: {
+  founderId: string;
+  claims: { id: string; text: string; trust: number; corroboration: string; axis: string }[];
+  total: number; traceId: string | null; onOpen: (id: string) => void;
+}) {
+  if (claims.length === 0) return null;
+  return (
+    <div className="spotlight">
+      <div className="spot-head">
+        <h2>⚠ Contradictions — read first</h2>
+        <span className="spot-count">
+          {claims.length} of {total} claims contradicted by external evidence · click one for the trace
+        </span>
+      </div>
+      {claims.map((c) => (
+        <div key={c.id}>
+          <ClaimRow c={c} active={traceId === c.id} onClick={() => onOpen(c.id)} />
+          {traceId === c.id && <VerdictLine founderId={founderId} claimId={c.id} />}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -669,7 +777,7 @@ export function FounderSwitcher({ founderId, founders, openFounder }: {
   return (
     <select className="control" value={founderId ?? ""}
       onChange={(e) => openFounder(e.target.value)} title="switch founder">
-      <option value="">all founders…</option>
+      <option value="">choose a founder…</option>
       {founderId && !founders.some((f) => f.id === founderId) && (
         <option value={founderId}>{founderId.replace("founder-", "")}</option>
       )}

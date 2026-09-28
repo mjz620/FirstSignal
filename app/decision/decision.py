@@ -4,6 +4,7 @@ mechanically gap-rendered required fields, and the latency strip. No LLM calls: 
 pure assembly/rendering layer, so it is deterministic and adds zero API cost.
 """
 import json
+import re
 
 from .. import instrument
 from ..memory import ingest
@@ -40,6 +41,17 @@ def gap_report(claims) -> list[dict]:
     return report
 
 
+def norm_stance(s: str | None) -> str | None:
+    """One stance vocabulary on every surface. The axis LLM occasionally emits
+    'PIVOT-BET territory' / 'Bullish' / 'bearish' for the rubric's own enum; the
+    stored row is kept verbatim, the read path collapses it to the enum word."""
+    if not s:
+        return s
+    t = s.strip().lower().replace("_", "-")
+    t = re.sub(r"\s*territory$", "", t)
+    return {"bearish": "bear", "bullish": "bullish"}.get(t, t)
+
+
 def per_axis(conn, founder_id: str, thesis_name: str | None = None) -> list[dict]:
     """Latest score per screening axis, side by side with a trend. Never averaged.
     With thesis_name, only scores produced under that thesis lens count."""
@@ -56,8 +68,8 @@ def per_axis(conn, founder_id: str, thesis_name: str | None = None) -> list[dict
                 "AND axis=? ORDER BY scored_at DESC LIMIT 1",
                 (founder_id, axis)).fetchone()
         if row:
-            out.append({"axis": axis, "score": row["score"], "stance": row["stance"],
-                        "coverage": row["coverage"],
+            out.append({"axis": axis, "score": row["score"],
+                        "stance": norm_stance(row["stance"]), "coverage": row["coverage"],
                         "trend": axes_mod.trend(conn, founder_id, axis)})
         else:
             out.append({"axis": axis, "status": "not yet screened"})
@@ -99,7 +111,8 @@ def per_axis_batch(conn, founder_ids: list[str],
                 d = g[0]["score"] - g[1]["score"]
                 tr = "improving" if d > 0.3 else "declining" if d < -0.3 else "stable"
             axes_out.append({"axis": axis, "score": latest["score"],
-                             "stance": latest["stance"], "coverage": latest["coverage"],
+                             "stance": norm_stance(latest["stance"]),
+                             "coverage": latest["coverage"],
                              "trend": tr})
         out[fid] = axes_out
     return out
@@ -114,7 +127,9 @@ def build(conn, founder_id: str, thesis) -> dict:
         "thesis": thesis.name,
         "decision": memo["decision"] if memo else None,
         "recommendation": json.loads(memo["recommendation"]) if memo else None,
-        "axes": per_axis(conn, founder_id),          # side by side, unblended
+        # Under the SAME lens as the memo — otherwise the brief shows the newest score
+        # from whichever thesis ran last, and Screening and Decision disagree.
+        "axes": per_axis(conn, founder_id, thesis.name),  # side by side, unblended
         "gaps": gap_report(claims),
         "latency": instrument.latency_strip(conn, founder_id),
         "memo_md": memo["memo_md"] if memo else None,

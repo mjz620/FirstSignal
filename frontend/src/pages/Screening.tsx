@@ -8,13 +8,14 @@ export default function Screening({ thesis, openFounder }:
   { thesis: string; openFounder: (id: string) => void }) {
   const [founders, setFounders] = useState<FounderRow[] | null>(null);
   const [killed, setKilled] = useState<{ id: string; reason: string }[]>([]);
+  const killReason = new Map(killed.map((k) => [k.id, k.reason]));
   const [err, setErr] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
     setFounders(null);
     api.getFounders(thesis).then(setFounders).catch((e) => setErr(e.message));
-    api.getKilled().then(setKilled).catch(() => {});
+    api.getKilled(thesis).then(setKilled).catch(() => {});
   }, [thesis]);
 
   const isApp = (f: FounderRow) => f.has_memo || f.source === "deck";
@@ -73,7 +74,10 @@ export default function Screening({ thesis, openFounder }:
                   <tr key={f.id}>
                     <td className="fname">
                       <button className="rowlink" onClick={() => openFounder(f.id)}>{f.name}</button>
-                      <FounderPeek fid={f.id} thesis={thesis} label="what?" />
+                      <FounderPeek fid={f.id} thesis={thesis} label="summary" />
+                      {killReason.has(f.id) && (
+                        <span className="kill-flag" title={killReason.get(f.id)}>killed at first pass</span>
+                      )}
                     </td>
                     <td><span className="src">{f.source}</span></td>
                     <td title={`persistent Founder Score · ${f.score_history_points} history points`}>
@@ -106,8 +110,8 @@ export default function Screening({ thesis, openFounder }:
 
       {killed.length > 0 && (
         <div className="killed">
-          <div className="section-h"><h2>First-pass kill screen</h2>
-            <span className="count">{killed.length} removed before diligence — reason logged</span></div>
+          <div className="section-h"><h2>First-pass kill screen — this thesis lens</h2>
+            <span className="count">{killed.length} removed before diligence under this lens — reason logged; "→ Diligence" above overrides it</span></div>
           {killed.map((k) => (
             <div key={k.id} className="kill"><b>{k.id.replace("founder-", "")}</b> — {k.reason}</div>
           ))}

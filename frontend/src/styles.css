@@ -69,6 +69,8 @@ button { font-family: inherit; }
   text-align: right; }
 .nav.on .nav-n { color: var(--accent); }
 .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+.side-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--faint); font-weight: 600; line-height: 1.3; }
 .main { flex: 1; min-width: 0; max-width: 1180px; padding: 40px 56px 100px; }
 @media (max-width: 860px) { .shell { flex-direction: column; }
   .side { width: auto; height: auto; position: static; flex-direction: row;
@@ -185,6 +187,13 @@ table.funnel { width: 100%; border-collapse: collapse; background: none;
 .rec-card .hist .m-k { margin: 0; }
 .wwcom + .turns { margin-top: 8px; }
 .turns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.turns-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.turns-list .turns { margin-bottom: 0; }
+.trend-new { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--faint); font-weight: 600; vertical-align: 1px; }
+.kill-flag { display: inline-block; margin-left: 6px; font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.08em; font-weight: 600; color: var(--bad); background: var(--bad-bg);
+  padding: 1px 6px; border-radius: 3px; cursor: help; vertical-align: 1px; }
 .rec-meters { max-width: 340px; margin-bottom: 10px; }
 .wwcom { color: var(--muted); font-size: 13px; }
 .wwcom b { color: var(--fg); }
@@ -249,6 +258,12 @@ table.funnel { width: 100%; border-collapse: collapse; background: none;
   font-variant-numeric: tabular-nums; vertical-align: 1px;
   transition: background var(--ease), color var(--ease); }
 .cite:hover { filter: brightness(0.95); text-decoration: underline; }
+/* citation chips carry the claim's tier colour — the same language as the ledger */
+.cite.tier-corr { color: var(--good); background: var(--good-bg); }
+.cite.tier-single { color: var(--mid); background: var(--mid-bg); }
+.cite.tier-self { color: var(--muted); background: var(--bg2); }
+.cite.tier-contra { color: var(--bad); background: var(--bad-bg); font-weight: 600; }
+.citegroup .cite + .cite { margin-left: 3px; }
 
 .evidence { width: 330px; flex-shrink: 0; background: var(--panel); border: 1px solid var(--accent);
   border-radius: var(--r); padding: 18px 20px; position: sticky; top: 24px; box-shadow: var(--shadow); }
@@ -260,6 +275,8 @@ table.funnel { width: 100%; border-collapse: collapse; background: none;
 .ev-label { color: var(--faint); text-transform: uppercase; font-size: 10px; letter-spacing: 0.06em; margin-bottom: 3px; }
 .ev-snip { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
 .ev-src { font-size: 11.5px; word-break: break-all; }
+.tr-signal .ev-src { display: block; margin-top: 4px; }
+.tr-adj { margin-bottom: 14px; }
 .muted { color: var(--muted); }
 
 /* ---- trust-tier color language (identical everywhere) ------------------- */

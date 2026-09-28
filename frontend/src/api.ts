@@ -309,7 +309,8 @@ export const getFounders = (thesis: string) =>
   j<FounderRow[]>(`/api/founders?thesis=${encodeURIComponent(thesis)}`);
 export const getFounder = (id: string, thesis: string) =>
   j<Brief>(`/api/founders/${id}?thesis=${encodeURIComponent(thesis)}`);
-export const getKilled = () => j<{ id: string; reason: string }[]>("/api/killed");
+export const getKilled = (thesis: string) =>
+  j<{ id: string; reason: string }[]>(`/api/killed?thesis=${encodeURIComponent(thesis)}`);
 export const getSourcing = (thesis: string) =>
   j<SourcingFeed>(`/api/sourcing?thesis=${encodeURIComponent(thesis)}`);
 export const getQuality = () => j<Quality>("/api/quality");

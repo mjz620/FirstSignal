@@ -2,14 +2,15 @@ import { useEffect, useState } from "react";
 import * as api from "../api";
 import type { AskResult, Axis, Brief } from "../api";
 import {
-  AXES, AXLABEL, Err, FounderSwitcher, inline, InfoTip, Memo, Meters, ProvenanceGraph,
-  Skeleton, Sparkline, stanceClass, TracePanel, TrendGlyph,
+  AXES, AXLABEL, ClaimRow, ContradictionSpotlight, Err, FounderSwitcher, inline, InfoTip, Memo,
+  Meters, ProvenanceGraph, Skeleton, Sparkline, stanceClass, TracePanel, TrendGlyph,
 } from "../components";
 
 /* Page 4 — "A decision you could act on in 24h, every sentence traceable." */
-export default function Decision({ thesis, founderId, founders, openFounder }: {
+export default function Decision({ thesis, founderId, founders, openFounder, openLedger }: {
   thesis: string; founderId: string | null;
   founders: { id: string; name: string }[]; openFounder: (id: string) => void;
+  openLedger: (id: string) => void;
 }) {
   const [brief, setBrief] = useState<Brief | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -47,6 +48,8 @@ export default function Decision({ thesis, founderId, founders, openFounder }: {
   const rec = brief?.recommendation || {};
   const d = brief?.decision || "none";
   const axById = Object.fromEntries((brief?.axes || []).map((a) => [a.axis, a]));
+  const claimById = new Map((brief?.claims || []).map((c) => [c.id, c]));
+  const contradicted = (brief?.claims || []).filter((c) => c.corroboration === "contradicted");
   // Axis → the trace of its highest-trust claim (cheap: claims ship with the brief).
   const topClaim = (axis: string) => {
     const c = (brief?.claims || []).filter((c) => c.axis === axis)
@@ -59,6 +62,8 @@ export default function Decision({ thesis, founderId, founders, openFounder }: {
       <div className="page-h">
         <h1>Memo &amp; Decision<span className="h-founder"> · {founderId.replace("founder-", "")}</span></h1>
         <FounderSwitcher founderId={founderId} founders={founders} openFounder={openFounder} />
+        <button className="minibtn" onClick={() => openLedger(founderId)}
+          title="every claim behind this memo, with its trace">Claim ledger →</button>
         {brief?.memo_md && (
           <a className="minibtn" href={`/api/memo/${founderId}.pdf?thesis=${encodeURIComponent(thesis)}`}
             target="_blank" rel="noreferrer" title="download a shareable investment-memo PDF">
@@ -81,7 +86,7 @@ export default function Decision({ thesis, founderId, founders, openFounder }: {
               ) : null}
               {brief.score_history?.length > 0 && (
                 <span className="hist" title="persistent Founder Score history — append-only">
-                  <span className="m-k">F-Score <InfoTip kind="fscore" founderId={founderId} /></span>
+                  <span className="m-k">Founder Score history <InfoTip kind="fscore" founderId={founderId} /></span>
                   <Sparkline history={brief.score_history} />
                 </span>
               )}
@@ -93,13 +98,23 @@ export default function Decision({ thesis, founderId, founders, openFounder }: {
               <div className="wwcom"><b>What would change our mind:</b> {rec.what_would_change_our_mind}</div>
             ) : null}
             {rec.claims_it_turns_on?.length ? (
-              <div className="turns">turns on
-                {rec.claims_it_turns_on.map((id) => (
-                  <button key={id} className="cite" onClick={() => setTraceId(id)}>[{id}]</button>
-                ))}
+              <div className="turns-list">
+                <div className="turns">This decision turns on {rec.claims_it_turns_on.length} claim{rec.claims_it_turns_on.length === 1 ? "" : "s"}:</div>
+                {rec.claims_it_turns_on.map((id) => {
+                  const c = claimById.get(id);
+                  return c ? (
+                    <ClaimRow key={id} c={c} active={traceId === id} onClick={() => setTraceId(id)} />
+                  ) : (
+                    <button key={id} className="cite" onClick={() => setTraceId(id)}
+                      title="cited by the recommendation but not in the ledger">{id}</button>
+                  );
+                })}
               </div>
             ) : null}
           </div>
+
+          <ContradictionSpotlight founderId={brief.founder_id} claims={contradicted}
+            total={brief.claims.length} traceId={traceId} onOpen={setTraceId} />
 
           <div className="subgrid">
             <div className="block">
@@ -145,7 +160,7 @@ export default function Decision({ thesis, founderId, founders, openFounder }: {
           </div>
 
           {rec.claims_it_turns_on?.length ? (
-            <details className="provwrap">
+            <details className="provwrap" open>
               <summary>Provenance — what the decision rests on</summary>
               <ProvenanceGraph decision={d} turnsOn={rec.claims_it_turns_on}
                 claims={brief.claims} totalClaims={brief.claims.length}
@@ -157,7 +172,8 @@ export default function Decision({ thesis, founderId, founders, openFounder }: {
             <div style={{ flex: 1, minWidth: 0 }}>
               {brief.memo_md ? (
                 <>
-                  <Memo md={brief.memo_md} onCite={setTraceId} />
+                  <Memo md={brief.memo_md} onCite={setTraceId}
+                    tiers={new Map(brief.claims.map((c) => [c.id, c.corroboration]))} />
                   {/* The page ends on a confident hand-off — the analyst's deliverable. */}
                   <div className="memo-actions">
                     <a className="minibtn primary" download

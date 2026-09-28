@@ -77,12 +77,13 @@ export default function App() {
           </button>
         ))}
         <div className="side-foot">
-          <select className="control" value={thesis}
+          <label className="side-label" htmlFor="thesis-lens">Thesis lens — every page runs through it</label>
+          <select id="thesis-lens" className="control" value={thesis}
             onChange={(e) => setThesis(e.target.value)} title="fund thesis lens">
             {theses.map((t) => <option key={t.file} value={t.file}>{t.name}</option>)}
           </select>
           <button className="control" onClick={toggle} title="toggle theme">
-            {theme === "dark" ? "☀" : "☾"}
+            {theme === "dark" ? "☀ Light theme" : "☾ Dark theme"}
           </button>
         </div>
       </nav>
@@ -94,11 +95,11 @@ export default function App() {
         {page === "screening" && <Screening thesis={thesis} openFounder={openDecision} />}
         {page === "diligence" && (
           <Diligence thesis={thesis} founderId={founderId}
-            founders={memoFounders} openFounder={openDiligence} />
+            founders={memoFounders} openFounder={openDiligence} openMemo={openDecision} />
         )}
         {page === "decision" && (
           <Decision thesis={thesis} founderId={founderId}
-            founders={memoFounders} openFounder={openDecision} />
+            founders={memoFounders} openFounder={openDecision} openLedger={openDiligence} />
         )}
         {page === "thesis" && (
           <ThesisPage theses={theses} thesis={thesis} setThesis={setThesis}
