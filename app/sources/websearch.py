@@ -1,6 +1,6 @@
 """Open-web discovery adapter, powered by the Tavily search API.
 
-The other five adapters each scan one curated surface. This one is unbounded: it
+The other six adapters each scan one curated surface. This one is unbounded: it
 searches the open web for companies matching a thesis topic, which is the only way
 to reach founders who are not on GitHub, not in a cohort, and not on a launch list.
 
@@ -28,23 +28,38 @@ from ..memory.resolve import is_infra_domain
 from . import tavily
 from .http import domain_of
 
-# Trailing site-name furniture in result titles: "Acme — AI for X | TechCrunch".
-_TITLE_TAIL = re.compile(r"\s*[|·—–-]\s*[^|·—–-]{0,40}$")
+# Title separators: a spaced dash, or a pipe/middle dot with or without spaces.
+# The dash needs whitespace on both sides, or "Hugging-Face" splits to "Hugging".
+_TITLE_SEP = re.compile(r"\s+[-–—:]\s+|\s*[|·]\s*")
+
+# Generic page words that lead a company site's title ("About Us | Acme"). They
+# are not names, and as a `name` key they would merge every site that uses them.
+_PAGE_WORDS = frozenset({
+    "about", "about us", "home", "homepage", "pricing", "blog", "careers", "jobs",
+    "contact", "contact us", "team", "our team", "products", "product", "docs",
+    "documentation", "login", "sign in", "sign up", "faq", "news", "press",
+    "welcome", "overview", "features", "customers", "solutions", "platform",
+})
 
 
 def _company_from(title: str, domain: str) -> str:
-    """The company name as an entity key. Prefer the leading token of the title;
-    fall back to the registrable part of its own domain."""
-    head = _TITLE_TAIL.sub("", (title or "").strip()).strip()
-    head = re.split(r"\s+[-–—:|]\s+", head)[0].strip()
-    if 2 <= len(head) <= 60:
-        return head
+    """The company name as an entity key. Prefer the first title segment that is
+    not a generic page word; fall back to the registrable part of its own domain."""
+    for seg in _TITLE_SEP.split((title or "").strip()):
+        seg = seg.strip()
+        if 2 <= len(seg) <= 60 and seg.lower() not in _PAGE_WORDS:
+            return seg
     return domain.split(".")[0] if domain else ""
 
 
+_MAX_RESULTS = 8
+
+
 def scan(conn, query: str, *, replay: bool, limit: int = 10) -> list[dict]:
+    # Fixed max_results: it is part of the Tavily cache key, so letting `limit`
+    # vary it made the CLI and the UI miss each other's cache for the same topic.
     resp = tavily.web_search(f"{query} startup company founded by", replay=replay,
-                             max_results=max(limit, 6))
+                             max_results=_MAX_RESULTS)
     items = []
     for r in resp.get("results", []):
         url = r.get("url")
@@ -60,8 +75,10 @@ def scan(conn, query: str, *, replay: bool, limit: int = 10) -> list[dict]:
         name = _company_from(title, domain)
         if not name:
             continue
+        # No query in the content: dedup hashes content, and the same page found
+        # under two thesis topics is one observation, not two signals.
         content = (f"Web discovery: {title} — {(r.get('content') or '')[:600]} "
-                   f"| domain={domain} query={query}")
+                   f"| domain={domain}")
         sid, ins = ingest.ingest_signal(conn, Signal(
             source="websearch", source_url=url, content=content,
             observed_at=r.get("published_date")))

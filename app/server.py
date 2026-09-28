@@ -371,7 +371,9 @@ def sourcing(thesis: str | None = None):
     out.sort(key=lambda x: (x["thesis_topic_match"], x["signal_count"]), reverse=True)
     dropped = conn.execute(
         "SELECT COUNT(DISTINCT signal_id) c FROM droplog").fetchone()["c"]
-    return {"thesis": t.name, "founders": out, "droplog_count": dropped}
+    from .sources import scanner
+    return {"thesis": t.name, "founders": out, "droplog_count": dropped,
+            "scan_sources": [n for n, _ in scanner.ADAPTERS]}
 
 
 @app.get("/api/channels")

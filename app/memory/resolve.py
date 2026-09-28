@@ -24,7 +24,7 @@ from .models import Founder
 _PRIORITY = ["github", "hn", "arxiv", "domain", "name"]
 
 # Platform/infrastructure domains that must never act as a linking entity key.
-# Exact match against the normalized netloc (www. already stripped by domain_of).
+# Matched by is_infra_domain(): the domain itself or any subdomain of it.
 INFRA_DOMAINS = frozenset({
     "github.com", "gist.github.com", "github.io", "gitlab.com", "bitbucket.org",
     "sourceforge.net", "twitter.com", "x.com", "linkedin.com", "facebook.com",
@@ -50,7 +50,7 @@ INFRA_DOMAINS = frozenset({
     "wikipedia.org", "quora.com", "stackoverflow.com", "ycombinator.com",
     "siliconangle.com", "techmeme.com", "hackernoon.com", "towardsdatascience.com",
     "analyticsindiamag.com", "theinformation.com", "protocol.com", "ventureradar.com",
-    "startupranking.com", "producthunt.com", "betalist.com", "f6s.com",
+    "startupranking.com", "betalist.com", "f6s.com",
     # VC firm sites. A "who is building X" search surfaces portfolio and thesis pages
     # constantly, and a fund is not a founder — its domain must never link one.
     "a16z.com", "sequoiacap.com", "greylock.com", "accel.com", "benchmark.com",
@@ -68,8 +68,8 @@ def is_infra_domain(domain: str) -> bool:
     as their parents, and each would have acted as a linking identity key — merging
     unrelated founders who happen to publish on the same platform.
     """
-    d = (domain or "").lower().strip(".")
-    return any(d == b or d.endswith("." + b) for b in INFRA_DOMAINS)
+    parts = (domain or "").lower().strip(".").split(".")
+    return any(".".join(parts[i:]) in INFRA_DOMAINS for i in range(len(parts)))
 
 
 def _linkable(kind: str, value: str) -> bool:

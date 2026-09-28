@@ -34,5 +34,7 @@ def get_text(url: str, params: dict, *, replay: bool):
 def domain_of(url: str | None) -> str:
     if not url:
         return ""
-    host = urlparse(url).netloc.lower()
+    # hostname, not netloc: drops port and userinfo, so "acme.com:8443" and
+    # "acme.com" are one key and "github.com:443" cannot slip past the blacklist.
+    host = (urlparse(url).hostname or "").lower()
     return host[4:] if host.startswith("www.") else host

@@ -22,6 +22,10 @@ RESULTS = {"results": [
     {"url": "https://github.com/someone/repo", "title": "someone/repo", "content": "code"},
     {"url": "https://betalabs.ai", "title": "Beta Labs | Inference infrastructure",
      "content": "Beta Labs runs inference."},
+    {"url": "https://gamma-ops.io/about", "title": "About Us | Gamma-Ops",
+     "content": "Gamma-Ops does ops."},
+    {"url": "https://github.com:443/someone/other", "title": "someone/other",
+     "content": "code behind a port"},
 ]}
 
 
@@ -38,7 +42,7 @@ def conn(tmp_path, monkeypatch):
 def test_media_and_directory_domains_never_become_candidates(conn):
     items = websearch.scan(conn, "inference", replay=True)
     domains = {i["keys"]["domain"] for i in items}
-    assert domains == {"acme-robotics.com", "betalabs.ai"}
+    assert domains == {"acme-robotics.com", "betalabs.ai", "gamma-ops.io"}
     # The three that would poison resolution are gone entirely.
     for bad in ("techcrunch.com", "crunchbase.com", "github.com"):
         assert bad not in domains
@@ -76,3 +80,35 @@ def test_subdomains_of_blacklisted_platforms_are_infra():
         assert is_infra_domain(d), d
     for d in ("acme-robotics.com", "betalabs.ai", "skillset.co", "notsubstack.com"):
         assert not is_infra_domain(d), d
+
+
+def test_generic_page_words_and_hyphens_do_not_become_names(conn):
+    """'About Us | Acme' must key on Acme, not 'About Us' — a generic page word as
+    a name key would merge every company site that uses it. A hyphen inside a word
+    is part of the name, not a title separator."""
+    by_domain = {i["keys"]["domain"]: i for i in websearch.scan(conn, "x", replay=True)}
+    assert by_domain["gamma-ops.io"]["keys"]["name"] == "Gamma-Ops"
+    assert websearch._company_from("Home - Beta Labs", "betalabs.ai") == "Beta Labs"
+    assert websearch._company_from("Pricing – Foo", "foo.com") == "Foo"
+    assert websearch._company_from("Hugging-Face AI", "hf.co") == "Hugging-Face AI"
+    assert websearch._company_from("About Us", "acme.com") == "acme"
+
+
+def test_same_page_under_two_topics_is_one_signal(conn):
+    websearch.scan(conn, "inference", replay=True)
+    again = websearch.scan(conn, "gpu serving", replay=True)
+    assert all(i["inserted"] is False for i in again)
+    n = conn.execute("SELECT COUNT(*) c FROM signals").fetchone()["c"]
+    assert n == len(again)
+
+
+def test_domain_of_strips_port_and_userinfo():
+    from app.sources.http import domain_of
+    assert domain_of("https://acme.com:8443/x") == "acme.com"
+    assert domain_of("https://user:pw@www.acme.com/") == "acme.com"
+
+
+def test_outbound_source_list_matches_scanner_adapters():
+    from app.memory.founder_score import _OUTBOUND
+    from app.sources.scanner import ADAPTERS
+    assert set(_OUTBOUND) == {n for n, _ in ADAPTERS}

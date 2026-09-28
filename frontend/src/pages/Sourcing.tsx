@@ -3,9 +3,8 @@ import * as api from "../api";
 import type { Channel, Outreach, RunStatus, SourcedFounder, SourcingFeed } from "../api";
 import { Err, FounderPeek, InfoTip, Skeleton } from "../components";
 
-/* Must stay in sync with scanner.ADAPTERS — /api/scan 422s on anything else. */
-const SCAN_SOURCES = ["github", "hn", "arxiv", "producthunt", "yc",
-                      "launchtracker", "websearch"];
+/* Scan sources come from the feed (scanner.ADAPTERS), so a new adapter shows up
+   here without a frontend edit. */
 const SCAN_LABEL: Record<string, string> = {
   launchtracker: "launchtracker (new launches)",
   websearch: "websearch (Tavily, open web)",
@@ -69,7 +68,7 @@ export default function Sourcing({ thesis, openFounder, openMemo }:
       </div>
 
       <div className="section-h"><h2>Channel yield — sourcing graph</h2></div>
-      <ScanNow thesis={thesis} onDone={onScanDone} />
+      <ScanNow thesis={thesis} sources={feed?.scan_sources ?? []} onDone={onScanDone} />
       {channels.length === 0 ? <Skeleton lines={2} /> : (
         <div className="chan-row">
           {channels.filter((c) => !["deck", "web", "manual"].includes(c.source)).map((c) => (
@@ -167,7 +166,8 @@ export default function Sourcing({ thesis, openFounder, openMemo }:
   );
 }
 
-function ScanNow({ thesis, onDone }: { thesis: string; onDone: () => void }) {
+function ScanNow({ thesis, sources, onDone }:
+  { thesis: string; sources: string[]; onDone: () => void }) {
   const [source, setSource] = useState("hn");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -197,7 +197,7 @@ function ScanNow({ thesis, onDone }: { thesis: string; onDone: () => void }) {
     <div style={{ margin: "0 0 12px", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
       <select className="control" value={source} onChange={(e) => setSource(e.target.value)}
         title="source to scan live (one per call — rate-limited)">
-        {SCAN_SOURCES.map((s) => (
+        {sources.map((s) => (
           <option key={s} value={s}>{SCAN_LABEL[s] || s}</option>
         ))}
       </select>

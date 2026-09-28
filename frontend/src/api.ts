@@ -98,6 +98,7 @@ export interface SourcingFeed {
   thesis: string;
   founders: SourcedFounder[];
   droplog_count: number;
+  scan_sources: string[];
 }
 export interface Channel {
   source: string;

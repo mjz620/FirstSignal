@@ -18,6 +18,8 @@ from .models import ScoreEntry
 _STARS = re.compile(r"stars=(\d+)")
 _POINTS = re.compile(r"points=(\d+)")
 _VELOCITY = re.compile(r"velocity: commits_6w=(\d+) active_days=(\d+)")
+# Mirrors sources/scanner.ADAPTERS (a direct import would be a memory->sources->
+# memory cycle); tests/test_websearch.py asserts the two stay equal.
 _OUTBOUND = ("github", "hn", "arxiv", "producthunt", "yc", "launchtracker",
              "websearch")
 

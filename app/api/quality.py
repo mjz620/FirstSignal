@@ -8,7 +8,7 @@ import json
 from fastapi import APIRouter
 
 from ..memory import db
-from ..memory.resolve import INFRA_DOMAINS
+from ..memory.resolve import is_infra_domain
 
 router = APIRouter(prefix="/api")
 
@@ -53,7 +53,7 @@ def quality():
     bad = []
     for r in conn.execute("SELECT id, entity_keys FROM founders"):
         keys = json.loads(r["entity_keys"] or "{}")
-        if any(v and v.lower() in INFRA_DOMAINS for v in keys.values()):
+        if any(v and is_infra_domain(v) for v in keys.values()):
             bad.append(r["id"])
     audit = {
         "founders_with_blacklisted_keys": bad,
