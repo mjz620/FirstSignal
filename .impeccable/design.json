@@ -1,34 +1,51 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-19T00:00:00Z",
-  "title": "Design System: VC Brain",
+  "generatedAt": "2026-09-28T00:00:00Z",
+  "title": "Design System: FirstSignal",
   "extensions": {
     "colorMeta": {
-      "accent": { "role": "primary", "displayName": "Evidence Blue", "canonical": "#3358d4", "dark": "#6f9bff", "tonalRamp": ["#0a1740", "#122a6b", "#1c3f9c", "#2a4dc0", "#3358d4", "#6f9bff", "#a9c1ff", "#eaeffd"] },
-      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#10141a", "dark": "#e7ebf1", "tonalRamp": ["#10141a", "#232a35", "#3a4351", "#667085", "#98a2b3", "#c3cad4", "#e4e7ec", "#f6f7f9"] },
-      "paper": { "role": "neutral", "displayName": "Cool Paper", "canonical": "#f6f7f9", "dark": "#0d1017", "tonalRamp": ["#0d1017", "#12161f", "#161b24", "#232a35", "#98a2b3", "#e4e7ec", "#eef0f3", "#f6f7f9"] },
-      "corroborated": { "role": "tertiary", "displayName": "Corroborated Green", "canonical": "#157f4c", "dark": "#3bce8e", "tonalRamp": ["#0a3322", "#0f5636", "#157f4c", "#1fa563", "#3bce8e", "#7fe0b6", "#b8eed5", "#e6f4ec"] },
-      "single-source": { "role": "tertiary", "displayName": "Single-Source Amber", "canonical": "#a5620a", "dark": "#e0a63a", "tonalRamp": ["#3a2303", "#6b4207", "#a5620a", "#c9820f", "#e0a63a", "#eec478", "#f5dcab", "#fbf0dc"] },
-      "contradiction": { "role": "tertiary", "displayName": "Contradiction Red", "canonical": "#b42318", "dark": "#f0655a", "tonalRamp": ["#3d0b07", "#7a160f", "#b42318", "#d43a2d", "#f0655a", "#f5938b", "#f9c2bd", "#fbeae8"] }
+      "accent": { "role": "primary", "displayName": "Evidence Blue", "canonical": "#8fb7ea", "light": "#1d4d8f", "tonalRamp": ["#0d1a30", "#16284a", "#1d4d8f", "#356fbd", "#6f9fdc", "#8fb7ea", "#b9d2f3", "#e8f0fb"] },
+      "accent-weak": { "role": "primary", "displayName": "Evidence Blue Wash", "canonical": "#16284a", "light": "#e8f0fb", "tonalRamp": ["#0d1a30", "#16284a", "#1f3660", "#2d4a80", "#5d82b8", "#9bb6dc", "#c9d8ef", "#e8f0fb"] },
+      "on-accent": { "role": "primary", "displayName": "On-Accent Ink", "canonical": "#0a1120", "light": "#ffffff", "tonalRamp": ["#0a1120", "#101a2f", "#131e35", "#223050", "#8592ab", "#a6b1c7", "#edf0f6", "#ffffff"] },
+      "fg": { "role": "neutral", "displayName": "Ink", "canonical": "#edf0f6", "light": "#101a2e", "tonalRamp": ["#0a1120", "#101a2e", "#223050", "#56617a", "#8592ab", "#a6b1c7", "#d7deec", "#edf0f6"] },
+      "muted": { "role": "neutral", "displayName": "Muted", "canonical": "#a6b1c7", "light": "#56617a", "tonalRamp": ["#0a1120", "#1c2640", "#3a4660", "#56617a", "#8592ab", "#a6b1c7", "#c8d0df", "#edf0f6"] },
+      "faint": { "role": "neutral", "displayName": "Faint", "canonical": "#8592ab", "light": "#5e6982", "tonalRamp": ["#0a1120", "#1c2640", "#3a4660", "#5e6982", "#8592ab", "#a6b1c7", "#c8d0df", "#edf0f6"] },
+      "bg": { "role": "neutral", "displayName": "Navy Ink", "canonical": "#0a1120", "light": "#f7f8fb", "tonalRamp": ["#0a1120", "#101a2f", "#131e35", "#223050", "#8592ab", "#e1e6ee", "#eef1f6", "#f7f8fb"] },
+      "bg2": { "role": "neutral", "displayName": "Navy Sink", "canonical": "#101a2f", "light": "#eef1f6", "tonalRamp": ["#0a1120", "#101a2f", "#131e35", "#223050", "#8592ab", "#e1e6ee", "#eef1f6", "#f7f8fb"] },
+      "panel": { "role": "neutral", "displayName": "Panel", "canonical": "#131e35", "light": "#ffffff", "tonalRamp": ["#0a1120", "#101a2f", "#131e35", "#223050", "#8592ab", "#e1e6ee", "#f7f8fb", "#ffffff"] },
+      "line": { "role": "neutral", "displayName": "Line", "canonical": "#223050", "light": "#e1e6ee", "tonalRamp": ["#0a1120", "#131e35", "#223050", "#34466e", "#8592ab", "#c8d0df", "#e1e6ee", "#f7f8fb"] },
+      "good": { "role": "tertiary", "displayName": "Corroborated Green", "canonical": "#72d1a6", "light": "#127040", "tonalRamp": ["#0a1e16", "#112a20", "#127040", "#1a9a5a", "#3bbd80", "#72d1a6", "#b3e6cf", "#e6f4ec"] },
+      "mid": { "role": "tertiary", "displayName": "Single-Source Amber", "canonical": "#e4b866", "light": "#8a5108", "tonalRamp": ["#1e180c", "#2e2514", "#8a5108", "#b8730f", "#d49a3a", "#e4b866", "#f0d6a4", "#fbf0dc"] },
+      "bad": { "role": "tertiary", "displayName": "Contradiction Red", "canonical": "#f28f86", "light": "#b42318", "tonalRamp": ["#241010", "#351b1c", "#b42318", "#d43a2d", "#e6655a", "#f28f86", "#f7c0ba", "#fbeae8"] }
     },
     "typographyMeta": {
-      "page-title": { "displayName": "Page Title", "purpose": "Serif page headers; editorial voice for section names." },
-      "memo-body": { "displayName": "Memo Body", "purpose": "The one long-read surface — memo prose set in serif so a recommendation reads authored." },
-      "body": { "displayName": "Body / UI", "purpose": "Default UI text, tables, descriptions. Prose caps ~70ch." },
-      "label": { "displayName": "Label", "purpose": "Uppercase organizing labels — column headers, block titles, badges." },
-      "data": { "displayName": "Data / Citation", "purpose": "Mono claim ids and inline citations; tabular-nums." }
+      "hero": { "displayName": "Hero", "purpose": "Landing headline only; Fraunces 300, opsz 144, italic accent phrase." },
+      "verdict": { "displayName": "Verdict", "purpose": "The decision word on the Decision page; italic, tier-colored, largest element." },
+      "page-title": { "displayName": "Page Title", "purpose": "Page headers; founder suffix in italic 300 accent." },
+      "memo-heading": { "displayName": "Memo Heading", "purpose": "Section heads inside the memo, opsz 72." },
+      "headline-figure": { "displayName": "Headline Figure", "purpose": "The one serif number that is the headline of its block (channel funnel 21px, axis cell 19px, landing stat 36px, verdict amount 22px)." },
+      "memo-body": { "displayName": "Memo Body", "purpose": "The memo prose and Ask-this-memo answer; 68ch measure on the page itself, no card." },
+      "body": { "displayName": "Body / UI", "purpose": "Default DM Sans UI text and page sub-copy (640px measure)." },
+      "table": { "displayName": "Table / Control", "purpose": "Ledger cells, nav items, controls; 12.5-13.5px scan layer." },
+      "section-kicker": { "displayName": "Section Kicker", "purpose": "The one kicker: .section-h h2 with an 18px hairline rule before it." },
+      "label": { "displayName": "Label", "purpose": "Column headers, block titles, meter keys, form labels; 0.12em everywhere." },
+      "data": { "displayName": "Data / Citation", "purpose": "Mono claim ids, inline citations, tier chips, domain chips, formulas; tabular-nums." }
     },
     "shadows": [
-      { "name": "ambient-panel", "value": "0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08)", "purpose": "The only shadow: lifts panels a hair in light mode. Removed (none) in dark mode." }
+      { "name": "ambient-panel-light", "value": "0 1px 2px rgba(16,24,40,.05), 0 10px 30px -14px rgba(16,24,40,.18)", "purpose": "The only shadow, via var(--shadow), under contained panels in light mode. Dark mode sets --shadow: none." }
     ],
     "motion": [
-      { "name": "state-fast", "value": "150ms ease-out", "purpose": "Default for hover/border/background state changes." },
-      { "name": "pulse-live", "value": "1.2s ease-in-out infinite (opacity 1 -> 0.45)", "purpose": "Marks a running live pipeline stage. MUST be guarded by prefers-reduced-motion." }
+      { "name": "ease", "value": "180ms cubic-bezier(0.2, 0.7, 0.2, 1)", "purpose": "The single state transition token (--ease) for hover, selection, border and background shifts." },
+      { "name": "l-rise", "value": "0.9s cubic-bezier(0.16, 1, 0.3, 1) both, staggered 0 / 80 / 160 / 240ms (opacity 0 -> 1, translateY 16px -> 0)", "purpose": "Landing entrance for h1, sub, stats, CTA. Disabled under prefers-reduced-motion." },
+      { "name": "pulse", "value": "1.2s ease-in-out infinite (opacity 1 -> 0.45)", "purpose": "Skeleton lines and a busy primary button. Guarded globally by the reduced-motion reset." },
+      { "name": "dilig-spin", "value": "0.7s linear infinite rotate", "purpose": "11px ring while a diligence run is live; reduced-motion sets animation none." }
     ],
     "breakpoints": [
       { "name": "twocol-collapse", "value": "980px" },
+      { "name": "netcols-collapse", "value": "900px" },
       { "name": "sidebar-collapse", "value": "860px" },
-      { "name": "subgrid-collapse", "value": "820px" }
+      { "name": "subgrid-collapse", "value": "820px" },
+      { "name": "landing-collapse", "value": "560px" }
     ]
   },
   "components": [
@@ -36,84 +53,130 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The one real action on a view (Submit application, Scan now, Open memo).",
-      "html": "<button class=\"ds-btn-primary\">Submit application</button>",
-      "css": ".ds-btn-primary { background: var(--accent, #3358d4); color: #fff; border: 1px solid var(--accent, #3358d4); border-radius: 8px; padding: 5px 11px; font: 500 12px Inter, sans-serif; cursor: pointer; transition: filter .15s ease-out, transform .12s ease-out; } .ds-btn-primary:hover { filter: brightness(1.08); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #3358d4); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: .55; cursor: default; }"
+      "description": "The one real action on a view (Submit application, Ask, Export IC memo). Ink text on the light dark-mode accent.",
+      "html": "<button class=\"ds-btn-primary\">Export IC memo (PDF) ↓</button>",
+      "css": ".ds-btn-primary { background: var(--accent, #8fb7ea); color: var(--on-accent, #0a1120); border: 1px solid var(--accent, #8fb7ea); border-radius: 4px; padding: 6px 12px; font: 500 12.5px 'DM Sans', -apple-system, sans-serif; cursor: pointer; transition: filter 180ms cubic-bezier(0.2,0.7,0.2,1); } .ds-btn-primary:hover { filter: brightness(1.08); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #8fb7ea); outline-offset: 2px; border-radius: 3px; } .ds-btn-primary:disabled { opacity: .55; cursor: default; }"
     },
     {
       "name": "Ghost Button",
       "kind": "button",
       "refersTo": "button-ghost",
-      "description": "Default action button; quiet at rest, accent on hover.",
-      "html": "<button class=\"ds-btn-ghost\">activate</button>",
-      "css": ".ds-btn-ghost { background: var(--panel, #fff); color: var(--ink, #10141a); border: 1px solid var(--line, #e4e7ec); border-radius: 8px; padding: 5px 11px; font: 400 12px Inter, sans-serif; cursor: pointer; transition: border-color .15s ease-out, color .15s ease-out; } .ds-btn-ghost:hover { border-color: var(--accent, #3358d4); color: var(--accent, #3358d4); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--accent, #3358d4); outline-offset: 2px; }"
-    },
-    {
-      "name": "Trust-Tier Chip",
-      "kind": "chip",
-      "refersTo": "tier-corroborated",
-      "description": "Corroboration tier + trust value. Color NEVER travels without the text label (colorblind-safe).",
-      "html": "<span class=\"ds-tier ds-tier-corr\">corroborated · 0.90</span>",
-      "css": ".ds-tier { display: inline-flex; align-items: center; font: 500 11px SFMono-Regular, ui-monospace, monospace; font-variant-numeric: tabular-nums; border-radius: 20px; padding: 2px 8px; } .ds-tier-corr { color: #157f4c; background: #e6f4ec; } .ds-tier-single { color: #a5620a; background: #fbf0dc; } .ds-tier-contra { color: #b42318; background: #fbeae8; } .ds-tier-self { color: #667085; background: #eef0f3; } .ds-tier-inferred { color: #667085; background: none; border: 1px dashed #e4e7ec; }"
-    },
-    {
-      "name": "Decision Badge",
-      "kind": "chip",
-      "refersTo": "tier-contradicted",
-      "description": "Invest / pass / conditional verdict.",
-      "html": "<span class=\"ds-badge ds-badge-pass\">pass</span>",
-      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 5px; font: 650 11px Inter, sans-serif; text-transform: uppercase; letter-spacing: .04em; padding: 3px 9px; border-radius: 20px; } .ds-badge-invest { color: #157f4c; background: #e6f4ec; } .ds-badge-pass { color: #b42318; background: #fbeae8; } .ds-badge-conditional { color: #a5620a; background: #fbf0dc; }"
+      "description": "Default action button; transparent with a hairline, accent on hover.",
+      "html": "<button class=\"ds-btn-ghost\">↓ PDF</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: var(--fg, #edf0f6); border: 1px solid var(--line, #223050); border-radius: 4px; padding: 6px 12px; font: 500 12.5px 'DM Sans', -apple-system, sans-serif; cursor: pointer; transition: border-color 180ms cubic-bezier(0.2,0.7,0.2,1), color 180ms cubic-bezier(0.2,0.7,0.2,1); } .ds-btn-ghost:hover { border-color: var(--accent, #8fb7ea); color: var(--accent, #8fb7ea); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--accent, #8fb7ea); outline-offset: 2px; border-radius: 3px; }"
     },
     {
       "name": "Input Field",
       "kind": "input",
       "refersTo": "input-field",
-      "description": "Text/textarea for the apply form, filters, NL query.",
-      "html": "<input class=\"ds-input\" placeholder=\"Company name\" />",
-      "css": ".ds-input { width: 100%; background: var(--panel, #fff); color: var(--ink, #10141a); border: 1px solid var(--line, #e4e7ec); border-radius: 8px; padding: 9px 12px; font: 400 14px Inter, sans-serif; box-shadow: 0 1px 2px rgba(16,24,40,.06); transition: border-color .15s ease-out; } .ds-input::placeholder { color: #98a2b3; } .ds-input:focus { outline: none; border-color: var(--accent, #3358d4); box-shadow: 0 0 0 3px #eaeffd; }"
+      "description": "Filter / apply / ask input. Panel fill, hairline, no shadow; border carries hover and focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"e.g. What is the strongest evidence of traction?\" />",
+      "css": ".ds-input { width: 100%; background: var(--panel, #131e35); color: var(--fg, #edf0f6); border: 1px solid var(--line, #223050); border-radius: 4px; padding: 10px 12px; font: 400 13.5px 'DM Sans', -apple-system, sans-serif; transition: border-color 180ms cubic-bezier(0.2,0.7,0.2,1); } .ds-input::placeholder { color: var(--faint, #8592ab); } .ds-input:hover { border-color: var(--faint, #8592ab); } .ds-input:focus { outline: none; border-color: var(--accent, #8fb7ea); }"
+    },
+    {
+      "name": "Sidebar Nav",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Pipeline rail on the page bg: serif wordmark with accent dot, italic serif tagline, sans items with serif numerals; active item on bg2 with an accent numeral.",
+      "html": "<nav class=\"ds-side\"><div class=\"ds-brand\">FirstSignal<span class=\"ds-dot\">.</span></div><div class=\"ds-side-sub\">the VC brain for evidence-grounded founder discovery</div><button class=\"ds-nav ds-on\"><span class=\"ds-nav-n\">1</span>Sourcing</button><button class=\"ds-nav\"><span class=\"ds-nav-n\">2</span>Screening</button><button class=\"ds-nav\"><span class=\"ds-nav-n\">3</span>Diligence</button><button class=\"ds-nav\"><span class=\"ds-nav-n\">4</span>Memo &amp; Decision</button></nav>",
+      "css": ".ds-side { width: 236px; background: var(--bg, #0a1120); border-right: 1px solid var(--line, #223050); padding: 30px 18px 22px; display: flex; flex-direction: column; gap: 2px; } .ds-brand { font-family: Fraunces, 'Iowan Old Style', Georgia, serif; font-size: 23px; font-weight: 500; letter-spacing: -0.01em; padding: 0 10px; line-height: 1; color: var(--fg, #edf0f6); } .ds-dot { color: var(--accent, #8fb7ea); } .ds-side-sub { font-family: Fraunces, Georgia, serif; font-style: italic; font-weight: 300; color: var(--muted, #a6b1c7); font-size: 13px; line-height: 1.4; padding: 0 10px; margin: 8px 0 30px; } .ds-nav { display: flex; align-items: center; gap: 12px; background: none; border: none; color: var(--muted, #a6b1c7); font: 500 13.5px 'DM Sans', -apple-system, sans-serif; text-align: left; padding: 8px 10px; border-radius: 4px; cursor: pointer; transition: color 180ms cubic-bezier(0.2,0.7,0.2,1), background 180ms cubic-bezier(0.2,0.7,0.2,1); } .ds-nav:hover, .ds-nav.ds-on { background: var(--bg2, #101a2f); color: var(--fg, #edf0f6); } .ds-nav-n { display: inline-block; width: 14px; font-family: Fraunces, Georgia, serif; font-size: 12px; font-weight: 400; color: var(--faint, #8592ab); font-variant-numeric: tabular-nums; text-align: right; } .ds-nav.ds-on .ds-nav-n { color: var(--accent, #8fb7ea); } .ds-nav:focus-visible { outline: 2px solid var(--accent, #8fb7ea); outline-offset: 2px; }"
+    },
+    {
+      "name": "Trust-Tier Chip",
+      "kind": "chip",
+      "refersTo": "tier-corroborated",
+      "description": "Corroboration tier + trust value in mono. Color never travels without the text label.",
+      "html": "<span class=\"ds-tier ds-tier-corr\">corroborated · 0.90</span> <span class=\"ds-tier ds-tier-single\">single-source · 0.62</span> <span class=\"ds-tier ds-tier-contra\">contradicted · 0.31</span> <span class=\"ds-tier ds-tier-self\">self-reported</span> <span class=\"ds-tier ds-tier-inferred\">inferred</span>",
+      "css": ".ds-tier { display: inline-flex; align-items: center; font: 600 11px SFMono-Regular, ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; border-radius: 3px; padding: 2px 7px; } .ds-tier-corr { color: var(--good, #72d1a6); background: var(--good-bg, #112a20); } .ds-tier-single { color: var(--mid, #e4b866); background: var(--mid-bg, #2e2514); } .ds-tier-contra { color: var(--bad, #f28f86); background: var(--bad-bg, #351b1c); } .ds-tier-self { color: var(--muted, #a6b1c7); background: var(--bg2, #101a2f); } .ds-tier-inferred { color: var(--muted, #a6b1c7); background: none; border: 1px dashed var(--line, #223050); }"
     },
     {
       "name": "Citation",
       "kind": "custom",
-      "refersTo": "claim-row",
+      "refersTo": "citation",
       "description": "Inline clickable claim id embedded in serif memo prose; opens the evidence rail.",
-      "html": "<button class=\"ds-cite\">[team-02 · 0.90 · corroborated]</button>",
-      "css": ".ds-cite { background: #eaeffd; color: #3358d4; border: none; border-radius: 5px; padding: 1px 6px; margin: 0 1px; cursor: pointer; font: 500 12px SFMono-Regular, ui-monospace, monospace; font-variant-numeric: tabular-nums; transition: filter .15s ease-out; } .ds-cite:hover { filter: brightness(.95); text-decoration: underline; } .ds-cite:focus-visible { outline: 2px solid #3358d4; outline-offset: 1px; }"
+      "html": "<p class=\"ds-memo-line\">Revenue is self-reported at $1.2M ARR <button class=\"ds-cite\">[traction-03]</button> and contradicted by the deck's own cohort table <button class=\"ds-cite\">[traction-07]</button>.</p>",
+      "css": ".ds-memo-line { font-family: Fraunces, 'Iowan Old Style', Georgia, serif; font-size: 17px; line-height: 1.72; color: var(--fg, #edf0f6); max-width: 68ch; margin: 0; } .ds-cite { background: var(--accent-weak, #16284a); color: var(--accent, #8fb7ea); border: none; border-radius: 3px; padding: 1px 6px; margin: 0 1px; cursor: pointer; font: 500 11.5px SFMono-Regular, ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; vertical-align: 1px; transition: background 180ms cubic-bezier(0.2,0.7,0.2,1), color 180ms cubic-bezier(0.2,0.7,0.2,1); } .ds-cite:hover { filter: brightness(0.95); text-decoration: underline; } .ds-cite:focus-visible { outline: 2px solid var(--accent, #8fb7ea); outline-offset: 2px; }"
+    },
+    {
+      "name": "Section Kicker",
+      "kind": "custom",
+      "refersTo": "section-kicker",
+      "description": "The one kicker in the system: an 18px hairline rule, then 11px tracked uppercase, with an optional tabular count.",
+      "html": "<div class=\"ds-section-h\"><h2>Claim ledger</h2><span class=\"ds-count\">42</span></div>",
+      "css": ".ds-section-h { display: flex; align-items: baseline; gap: 10px; margin: 0 0 14px; } .ds-section-h h2 { display: flex; align-items: center; gap: 10px; font: 600 11px 'DM Sans', -apple-system, sans-serif; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted, #a6b1c7); margin: 0; } .ds-section-h h2::before { content: ''; width: 18px; height: 1px; background: var(--faint, #8592ab); } .ds-count { color: var(--faint, #8592ab); font: 400 12px 'DM Sans', sans-serif; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Verdict Block",
+      "kind": "custom",
+      "refersTo": "verdict",
+      "description": "Ruled section, not a card: italic serif verdict colored by tier, serif check amount, and a decision badge.",
+      "html": "<div class=\"ds-rec\"><div class=\"ds-verdict-row\"><span class=\"ds-verdict ds-pass\">pass</span><span class=\"ds-amt\"><b>$100,000</b> check</span><span class=\"ds-badge ds-badge-pass\">pass</span></div></div>",
+      "css": ".ds-rec { padding: 6px 0 26px; border-bottom: 1px solid var(--line, #223050); } .ds-verdict-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; } .ds-verdict { font-family: Fraunces, 'Iowan Old Style', Georgia, serif; font-size: 46px; font-weight: 400; font-style: italic; line-height: 1; letter-spacing: -0.02em; text-transform: capitalize; font-variation-settings: 'opsz' 144; } .ds-verdict.ds-invest { color: var(--good, #72d1a6); } .ds-verdict.ds-pass { color: var(--bad, #f28f86); } .ds-verdict.ds-conditional { color: var(--mid, #e4b866); } .ds-amt { font: 400 15px 'DM Sans', sans-serif; color: var(--muted, #a6b1c7); font-variant-numeric: tabular-nums; } .ds-amt b { color: var(--fg, #edf0f6); font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 500; } .ds-badge { display: inline-flex; align-items: center; font: 600 10.5px 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 9px; border-radius: 3px; } .ds-badge-pass { color: var(--bad, #f28f86); background: var(--bad-bg, #351b1c); } .ds-badge-invest { color: var(--good, #72d1a6); background: var(--good-bg, #112a20); } .ds-badge-conditional { color: var(--mid, #e4b866); background: var(--mid-bg, #2e2514); }"
+    },
+    {
+      "name": "Ledger Row",
+      "kind": "card",
+      "refersTo": "block",
+      "description": "A channel-yield ledger cell: top hairline on the page bg, 0.12em label, serif headline figure, faint rate line. No box.",
+      "html": "<div class=\"ds-chan\"><div class=\"ds-chan-name\">GitHub</div><div class=\"ds-chan-funnel\">412 → 38</div><div class=\"ds-chan-rate\">9.2% resolved</div></div>",
+      "css": ".ds-chan { border-top: 1px solid var(--line, #223050); padding: 12px 0 14px; min-width: 120px; color: var(--fg, #edf0f6); } .ds-chan-name { font: 600 10.5px 'DM Sans', -apple-system, sans-serif; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted, #a6b1c7); } .ds-chan-funnel { font-family: Fraunces, 'Iowan Old Style', Georgia, serif; font-size: 21px; font-weight: 400; font-variant-numeric: tabular-nums; margin: 6px 0 3px; letter-spacing: -0.01em; } .ds-chan-rate { font: 400 11.5px 'DM Sans', sans-serif; color: var(--faint, #8592ab); }"
+    },
+    {
+      "name": "Claim Row",
+      "kind": "card",
+      "refersTo": "claim-row",
+      "description": "A claim in the diligence ledger: panel fill, hairline, mono id in accent, serif claim text; accent border + wash when active.",
+      "html": "<button class=\"ds-claimrow ds-active\"><span class=\"ds-cr-id\">team-02</span><span class=\"ds-cr-axis\">founder</span><span class=\"ds-cr-text\">Both founders shipped the v1 inference runtime while at the prior employer.</span></button>",
+      "css": ".ds-claimrow { display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; color: var(--fg, #edf0f6); background: var(--panel, #131e35); border: 1px solid var(--line, #223050); border-radius: 4px; padding: 8px 12px; cursor: pointer; font: 400 14px 'DM Sans', sans-serif; } .ds-claimrow:hover { border-color: var(--accent, #8fb7ea); } .ds-claimrow.ds-active { border-color: var(--accent, #8fb7ea); background: var(--accent-weak, #16284a); } .ds-cr-id { font: 700 12px SFMono-Regular, ui-monospace, Menlo, monospace; color: var(--accent, #8fb7ea); min-width: 64px; } .ds-cr-axis { font: 600 10.5px 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint, #8592ab); min-width: 56px; } .ds-cr-text { font-family: Fraunces, 'Iowan Old Style', Georgia, serif; font-size: 14.5px; line-height: 1.5; flex: 1; min-width: 0; }"
     }
   ],
   "narrative": {
-    "northStar": "The Editorial Terminal",
-    "overview": "VC Brain is a Bloomberg terminal that reads like a magazine. Reasoning (memos, titles, quotes) is set in a warm editorial serif so a recommendation reads authored and trustworthy; every number, score, and citation is tabular sans/mono so the data stays terminal-precise. The surface is flat and tonally layered — Paper, Paper Sink, Panel — with one accent, Evidence Blue, carrying citations, selection, and primary actions, and a strict green/amber/red/slate trust vocabulary that appears identically everywhere. Components are crisp and tactile: thin borders at rest, a decisive accent shift on interaction.",
+    "northStar": "The Editorial Dark Terminal",
+    "overview": "FirstSignal is the screen an associate reads at 11pm before a 9am investment committee. The page is navy ink, not black: a deep blue-black that has a hue the way paper does, with three tonal steps (bg → bg2 → panel) stacked above it and a single hairline doing almost all of the structural work. On that ground the system speaks in two voices. Everything the analyst reads — the page title, the verdict, the memo, evidence quotes, and the one number that is the headline of its block — is set in Fraunces, a soft high-contrast serif with an optical-size axis, ranged from a 300-weight hero to a 46px italic verdict. Everything they scan — tables, labels, controls, meta — is set in DM Sans, quiet and even, at 14px and below. Mono is reserved for claim ids and citations. The intended effect is an elegant institutional site rendered in dark mode: a memo that reads authored, over a data layer that never competes with it.\n\nThe surface is flattened. Tables are hairline rows on the page itself with no box; the memo is a document at a 68ch measure, not a card; the verdict is a ruled section; channel yields, landing stats, and the four flow stages are ruled ledger rows. Only genuinely contained things — blocks, the evidence rail, the trace panel, forms, popovers — carry a 1px line border on a panel fill. Dark mode casts no shadow at all; the light fallback allows one soft ambient shadow under panels. One accent, Evidence Blue (a sky blue on the navy), marks citations, current selection, and the primary action, and nothing else. Around it the trust vocabulary — green corroborated, amber single-source, red contradicted, slate self-reported — appears identically on every screen, each hue paired with a text label.\n\nThe system rejects consumer-fintech softness, enterprise-legacy chrome, and generic SaaS/AI-dashboard slop. Motion is state-only: one 180ms ease for hover and selection, plus the landing page's single entrance rise, both guarded for reduced motion.",
     "keyCharacteristics": [
-      "Serif for reasoning, tabular sans/mono for data — the two-voice split is the identity.",
-      "Flat, tonally-layered surfaces; depth from stacked neutrals, not shadow.",
-      "One accent (Evidence Blue) reserved for citations, selection, and primary actions.",
-      "A semantic trust-tier color language, always paired with a text label.",
-      "Density that serves the task; the three screening axes are shown side by side, never blended."
+      "Dark is canonical; light is the mirrored fallback with identical token names.",
+      "Two voices: Fraunces for what is read (titles, verdict, memo, quotes, headline figures), DM Sans for what is scanned (UI, tables, labels), mono for machine identifiers.",
+      "Flattened surfaces: hairline rules on the page bg for tables, ledgers and sections; 1px-bordered panels only for contained things; no dark-mode shadow.",
+      "Tight radii: 6px blocks, 4px controls, 3px chips. Nothing is a pill.",
+      "One kicker system (11px, 0.14em, 18px leading rule) and one label tracking (0.12em) across the product.",
+      "One accent (Evidence Blue) for citations, selection, and the primary action; a four-color trust vocabulary that always travels with its text label."
     ],
     "rules": [
-      { "name": "The One Voice Rule", "body": "Evidence Blue is the only accent. It appears on citations, current selection, and primary actions — nothing else. Its rarity is what makes a citation legible as a link to proof.", "section": "colors" },
-      { "name": "The Trust-Vocabulary Rule", "body": "Green/amber/red/slate mean corroborated/single-source/contradicted/self-reported everywhere, without exception. A tier color is never reused for decoration and never travels without its text label.", "section": "colors" },
-      { "name": "The Two-Voice Rule", "body": "Serif is for reasoning a human reads (memos, titles, quotes). Sans and mono are for data and chrome. Never set a memo in sans; never set a data label in serif.", "section": "typography" },
-      { "name": "The Flat-Terminal Rule", "body": "Surfaces are flat. Depth is tonal, not cast. If a component needs a shadow to separate from its background, the wrong background tone is being used — reach for Panel over Paper instead.", "section": "elevation" }
+      { "name": "The One Voice Rule", "body": "Evidence Blue is the only accent. It appears on citations, current selection, and the one primary action per view; nothing else. Its rarity is what makes a citation legible as a link to proof.", "section": "colors" },
+      { "name": "The Trust-Vocabulary Rule", "body": "Green/amber/red/slate mean corroborated/single-source/contradicted/self-reported everywhere, without exception. A tier color is never reused for decoration, and it never travels without its text label.", "section": "colors" },
+      { "name": "The Navy-Not-Black Rule", "body": "The dark ground is bg (a hued navy ink), never #000 or a neutral gray. Every dark surface — bg, bg2, panel, line, the tier tints — carries the same blue cast so the page reads as one material.", "section": "colors" },
+      { "name": "The Two-Voice Rule", "body": "Fraunces sets what the analyst reads: titles, the verdict, the memo and its headings, evidence and quotes, the wordmark, and the single headline figure of a block. DM Sans sets what they scan: body UI, tables, labels, controls. Never set a memo or a title in the sans; never set a table cell, a label, or a control in the serif. Mono is reserved for claim ids and citations.", "section": "typography" },
+      { "name": "The Light-Display Rule", "body": "Serif display sizes are set light (300 hero and landing, 400 titles and verdict) with opsz 144. Weight is never the hierarchy device in the serif; size, optical size, italic, and color are.", "section": "typography" },
+      { "name": "The One-Kicker Rule", "body": "There is one kicker in the system: the .section-h label, 11px uppercase 0.14em with its 18px leading rule. All other small labels share 0.12em tracking at 600 weight. Do not invent eyebrow variants.", "section": "typography" },
+      { "name": "The Flat-Terminal Rule", "body": "Surfaces are flat. Depth is tonal, not cast. If a component seems to need a shadow to separate from its background, the wrong tone is in use: reach for panel over bg, or a hairline rule, instead.", "section": "elevation" },
+      { "name": "The Ruled-Not-Boxed Rule", "body": "Anything that is a sequence or a ledger — table rows, channel yields, landing stats, flow stages, the verdict section, the Ask-this-memo block, the latency footer — is separated by 1px line rules on the page bg, not enclosed in a card. A panel border is reserved for things that are genuinely contained: blocks, the evidence rail, the trace, forms, popovers, claim rows.", "section": "elevation" }
     ],
     "dos": [
-      "Do reserve Evidence Blue (#3358d4) for citations, current selection, and the one primary action per view.",
-      "Do keep green/amber/red/slate meaning corroborated/single-source/contradicted/self-reported, and always pair a tier color with its text label (WCAG-AA + colorblind-safe).",
-      "Do set memos, page titles, and evidence quotes in Newsreader serif; set all data, labels, and citations in Inter/mono with tabular-nums.",
-      "Do show the three screening axes and the Signal/Coverage split as separate values, never averaged.",
-      "Do render gaps and contradictions with weight — a flagged 'not disclosed' or a pinned contradiction is a feature of the surface.",
-      "Do convey depth with tonal layers (Paper -> Panel -> Wash) and interaction with border/background shifts.",
-      "Do guard every animation (currently the pulse on live stages) with prefers-reduced-motion."
+      "Do build on the dark tokens first (bg #0a1120, panel #131e35, line #223050, fg #edf0f6) and check the light mirror second; dark is canonical (The Navy-Not-Black Rule).",
+      "Do reserve Evidence Blue (#8fb7ea dark / #1d4d8f light) for citations, current selection, the active nav numeral, and the one primary action per view (The One Voice Rule).",
+      "Do keep green/amber/red/slate meaning corroborated/single-source/contradicted/self-reported on every screen, and always pair a tier color with its text label (WCAG-AA + colorblind-safe, per PRODUCT.md).",
+      "Do set titles, the verdict, memo prose and headings, evidence quotes, the wordmark, and a block's single headline figure in Fraunces; set body UI, tables, labels, and controls in DM Sans; set claim ids and citations in mono (The Two-Voice Rule).",
+      "Do keep serif display light: 300 for the hero and landing headings, 400 for page titles and the verdict, opsz 144 at display sizes and 72 for memo headings (The Light-Display Rule).",
+      "Do use the one kicker (.section-h h2: 11px, 0.14em, 18px leading rule) for section labels and 10.5px / 0.12em / 600 for every other small label (The One-Kicker Rule).",
+      "Do separate sequences and ledgers with 1px line rules on the page bg — tables, channel yields, stats, flow stages, the verdict section — and give a panel border only to things that are contained (The Ruled-Not-Boxed Rule).",
+      "Do use the three radii only: 6px blocks, 4px controls, 3px chips.",
+      "Do keep --shadow: none in dark mode and the single ambient shadow in light; convey interaction with border and background shifts on the 180ms --ease token.",
+      "Do show the three screening axes and the Signal/Coverage split as separate values, never averaged into one number.",
+      "Do render gaps and contradictions with weight — the amber gap micro-badge, the red-bordered contradiction spotlight — in the brief's own words, never filled.",
+      "Do guard every animation (l-rise, pulse, dilig-spin) with @media (prefers-reduced-motion: reduce); reduced motion is a PRODUCT.md commitment.",
+      "Do apply tabular-nums to every figure regardless of face."
     ],
     "donts": [
-      "Don't look like consumer fintech — no pastel rounding, playful illustration, or Robinhood/Cash-App softness.",
-      "Don't look like enterprise legacy (Salesforce-y) — no cluttered toolbars, dated corporate blues, heavy chrome.",
-      "Don't look like generic SaaS/AI-dashboard slop — no purple-blue AI gradients, gradient hero cards, identical icon-card grids, or big-number KPI template.",
-      "Don't use gradient text, decorative glassmorphism, or border-left/right color stripes as accents.",
-      "Don't cast shadows to separate a surface — fix the background tone instead.",
-      "Don't introduce a second accent hue, and never reuse a trust-tier color for decoration.",
-      "Don't nest cards, and don't let a wide table scroll the page body — wrap it in .tablewrap."
+      "Don't use pure black or neutral gray for a dark surface; every dark tone carries the navy cast.",
+      "Don't use pill radii or anything above 6px on a UI element (bars excepted). The old 8/12/20px scale is gone.",
+      "Don't put the memo, a table, a stat row, or the verdict inside a card; don't nest cards; don't box a ledger.",
+      "Don't set a table cell, label, control, or nav item in Fraunces, and don't set a title, the verdict, or memo prose in DM Sans.",
+      "Don't set serif display at 500–600 to make it heavier; use size, italic, optical size, or color instead.",
+      "Don't invent a second kicker or eyebrow style; there is one .section-h kicker and one label tracking.",
+      "Don't cast shadows in dark mode, use glassmorphism, gradient text, or border-left/border-right color stripes as accents (the 2px trace-signal rail is a quote mark, not an accent).",
+      "Don't introduce a second accent hue, reuse a trust-tier color for decoration, or put white text on the dark accent fill (use on-accent).",
+      "Don't look like consumer fintech (pastel rounding, playful illustration), enterprise legacy (toolbars, heavy chrome, corporate blues), or generic SaaS/AI dashboards (purple-blue gradients, glass stat cards, big-number KPI grids).",
+      "Don't let a wide table scroll the page body; wrap it in .tablewrap."
     ]
   }
 }

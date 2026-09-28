@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import * as api from "../api";
 import FlowField from "../components/FlowField";
 
-/* The entry screen before the dashboard — a self-contained dark hero (independent
-   of the app's light/dark toggle). Its stat row is live, fetched from the same
+/* The entry screen before the dashboard — a dark hero on the app's canonical
+   dark tokens (pinned, so it never flips with the toggle). Its stat row is live, fetched from the same
    endpoints the app uses everywhere else, so the first thing a VC sees is proof
    this is a real running system, not a mockup. The workflow section is an
    interpretable, plain-language account of exactly what the machine does at each
