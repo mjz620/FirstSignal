@@ -780,6 +780,14 @@ def auth_login(body: LoginBody, request: Request):
     return _signed_in(request, user, token)
 
 
+@app.post("/api/auth/demo")
+def auth_demo(request: Request):
+    """Explore the demo firm without an account."""
+    ratelimit.check("login", request)
+    user, token = auth.demo_session()
+    return _signed_in(request, user, token)
+
+
 @app.post("/api/auth/logout")
 def auth_logout(request: Request):
     auth.logout(request.cookies.get(auth.COOKIE))

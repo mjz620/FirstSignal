@@ -415,4 +415,5 @@ export const login = (email: string, password: string) =>
 export const signup = (body: { email: string; password: string; firm_name?: string;
                                invite_code?: string }) =>
   post<Me>("/api/auth/signup", body);
+export const demoSession = () => post<Me>("/api/auth/demo", {});
 export const logout = () => post<{ ok: boolean }>("/api/auth/logout", {});

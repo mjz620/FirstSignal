@@ -30,6 +30,12 @@ export default function Login({ onSignedIn }: { onSignedIn: (me: Me) => void }) 
     setBusy(false);
   };
 
+  const explore = async () => {
+    setBusy(true); setErr(null);
+    try { onSignedIn(await api.demoSession()); } catch (ex) { setErr((ex as Error).message); }
+    setBusy(false);
+  };
+
   const tabs: [Mode, string][] = [["signin", "Sign in"], ["create", "Create a firm"], ["join", "Join a firm"]];
   return (
     <div className="login-wrap">
@@ -71,6 +77,14 @@ export default function Login({ onSignedIn }: { onSignedIn: (me: Me) => void }) 
         <button className="minibtn primary login-go" type="submit" disabled={busy}>
           {busy ? "…" : mode === "signin" ? "Sign in" : mode === "create" ? "Create firm" : "Join firm"}
         </button>
+        <div className="login-or"><span>or</span></div>
+        <button className="minibtn login-demo" type="button" onClick={explore} disabled={busy}>
+          Explore the demo without an account →
+        </button>
+        <p className="login-note">
+          The demo firm holds the Corevance / Tracewell story and all three lenses. It is
+          shared with everyone who explores it.
+        </p>
         {mode === "create" && (
           <p className="login-note">
             A new firm starts with the demo founders (Corevance, Tracewell, …) and the

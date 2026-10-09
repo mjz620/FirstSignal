@@ -84,6 +84,7 @@ export default function App() {
   if (me === undefined) return null;  // one paint while the session is checked
   if (me === null) return <Login onSignedIn={setMe} />;
 
+  const guest = me.email.startsWith("guest@");
   const signOut = () => { api.logout().catch(() => {}); setMe(null); };
   const copyInvite = () => {
     navigator.clipboard?.writeText(me.firm.invite_code).then(() => {
@@ -110,15 +111,19 @@ export default function App() {
             {theses.map((t) => <option key={t.slug} value={t.slug}>{t.name}</option>)}
           </select>
           <div className="firm-box" title={me.email}>
-            <div className="firm-name">{me.firm.name}</div>
+            <div className="firm-name">{me.firm.name}{guest && <span className="firm-guest">guest</span>}</div>
             <div className="firm-row">
-              <span className="firm-code" title="colleagues join your firm with this code">
-                invite {me.firm.invite_code}
-              </span>
-              <button className="minibtn" onClick={copyInvite} aria-label="copy invite code">
-                {copied ? "copied" : "copy"}
-              </button>
-              <button className="minibtn" onClick={signOut}>Sign out</button>
+              {!guest && (
+                <>
+                  <span className="firm-code" title="colleagues join your firm with this code">
+                    invite {me.firm.invite_code}
+                  </span>
+                  <button className="minibtn" onClick={copyInvite} aria-label="copy invite code">
+                    {copied ? "copied" : "copy"}
+                  </button>
+                </>
+              )}
+              <button className="minibtn" onClick={signOut}>{guest ? "Leave demo" : "Sign out"}</button>
             </div>
           </div>
           <button className="control" onClick={toggle} title="toggle theme">

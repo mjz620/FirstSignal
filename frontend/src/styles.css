@@ -875,3 +875,9 @@ table.cmp .cmp-sep td { border-top: 2px solid var(--line); }
 .firm-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .firm-code { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.login-or { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+.login-or::before, .login-or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.login-demo { align-self: flex-start; }
+.firm-guest { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); margin-left: 6px; vertical-align: middle; }

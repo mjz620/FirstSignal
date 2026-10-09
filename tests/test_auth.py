@@ -126,3 +126,15 @@ def test_slug_validation_blocks_injection():
         with pytest.raises(ValueError):
             db.validate_slug(bad)
     assert db.validate_slug("acme_2") == "acme_2"
+
+
+def test_demo_guest_session_needs_no_account(client):
+    c = client()
+    me = c.post("/api/auth/demo").json()
+    assert me["firm"]["slug"] == "demo" and me["email"].startswith("guest@")
+    assert c.get("/api/auth/me").status_code == 200
+    assert c.get("/api/theses").status_code == 200  # the demo store, not a new firm
+    assert not (config.DB_PATH.parent / "firms").exists()
+    # the guest account cannot be signed into with a password
+    assert c.post("/api/auth/login", json={"email": me["email"], "password": "anything1"}
+                  ).status_code == 401

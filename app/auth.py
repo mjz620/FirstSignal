@@ -194,6 +194,27 @@ def login(email: str, password: str) -> tuple[User, str]:
     return user, _issue_session(conn, user.id, user.firm.slug)
 
 
+GUEST_EMAIL = "guest@demo.firstsignal"
+
+
+def demo_session() -> tuple[User, str]:
+    """A session in the demo firm with no account: one shared guest user whose
+    password is random and never disclosed, so it can only be reached this way."""
+    firm, _ = ensure_demo_firm()
+    conn = _control()
+    row = conn.execute("SELECT id FROM users WHERE email=?", (GUEST_EMAIL,)).fetchone()
+    if row:
+        uid = row["id"]
+    else:
+        uid = str(uuid.uuid4())
+        conn.execute("INSERT INTO users (id, email, password_hash, firm_slug, created_at) "
+                     "VALUES (?,?,?,?,?)",
+                     (uid, GUEST_EMAIL, hash_password(secrets.token_urlsafe(32)),
+                      firm.slug, _now().isoformat()))
+        conn.commit()
+    return User(id=uid, email=GUEST_EMAIL, firm=firm), _issue_session(conn, uid, firm.slug)
+
+
 def logout(token: str | None) -> None:
     if token:
         conn = _control()
