@@ -354,6 +354,34 @@ def founder(founder_id: str, thesis: str | None = None):
     return brief
 
 
+# --- company page: one aggregate, every name in the app links here ------------
+@app.get("/api/companies/{founder_id}")
+def company(founder_id: str, thesis: str | None = None):
+    from . import companies
+    conn = _conn()
+    out = companies.build(conn, founder_id, _thesis(conn, thesis))
+    if out is None:
+        raise HTTPException(404, "no such company")
+    return out
+
+
+class StateBody(BaseModel):
+    stage: str
+    next_step: str = ""
+
+
+@app.put("/api/companies/{founder_id}/state")
+def company_state(founder_id: str, body: StateBody):
+    from . import companies
+    conn = _conn()
+    if not conn.execute("SELECT 1 FROM founders WHERE id=?", (founder_id,)).fetchone():
+        raise HTTPException(404, "no such company")
+    try:
+        return companies.set_state(conn, founder_id, body.stage, body.next_step)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+
+
 @app.get("/api/memo/{founder_id}.pdf")
 def memo_pdf(founder_id: str, thesis: str | None = None):
     """Shareable investment-memo PDF — the artifact a VC actually emails around."""

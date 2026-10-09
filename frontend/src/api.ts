@@ -413,4 +413,29 @@ export const signup = (body: { email: string; password: string; firm_name?: stri
                                invite_code?: string }) =>
   post<Me>("/api/auth/signup", body);
 export const demoSession = () => post<Me>("/api/auth/demo", {});
+
+/* Company page: everything on record about one company, in one call. */
+export interface Fact { label: string; value: number; signal_id: string; url: string | null; observed_at: string | null }
+export interface CoSignal { id: string; source: string; url: string | null; content: string; observed_at: string | null }
+export interface Company {
+  id: string; name: string; company: string; person: string | null;
+  first_seen: string | null; source: string;
+  links: { label: string; url: string }[];
+  stage: string; next_step: string; stage_set_by_user: boolean; run_state: string;
+  decision: string | null; recommendation: Brief["recommendation"]; killed_reason: string | null;
+  axes: Axis[]; score: number | null; coverage: number; dimensions: Record<string, number>;
+  score_history: ScorePoint[];
+  facts: Fact[]; signals: CoSignal[];
+  evidence: { axis: string; question: string; claims: Claim[] }[];
+  claims: Claim[]; gaps: Gap[]; open_items: string[];
+  memo_md: string | null; bull: string | null; bear: string | null; memo_at: string | null;
+  outreach: { subject: string; body: string; created_at: string }[];
+}
+export const STAGES = ["new", "researching", "diligence", "decision", "invested", "passed"] as const;
+export const getCompany = (id: string, thesis: string) =>
+  j<Company>(`/api/companies/${encodeURIComponent(id)}?thesis=${encodeURIComponent(thesis)}`);
+export const setCompanyState = (id: string, stage: string, next_step: string) =>
+  j<{ stage: string; next_step: string }>(`/api/companies/${encodeURIComponent(id)}/state`, {
+    method: "PUT", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ stage, next_step }) });
 export const logout = () => post<{ ok: boolean }>("/api/auth/logout", {});

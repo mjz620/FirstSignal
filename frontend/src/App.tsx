@@ -11,6 +11,8 @@ import Compare from "./pages/Compare";
 import MethodologyPage from "./pages/Methodology";
 import NetworkPage from "./pages/Network";
 import Landing from "./pages/Landing";
+import CompanyPage from "./pages/Company";
+import type { CoTab } from "./pages/Company";
 
 /* Shell: left sidebar mirrors the brief's own pipeline — the nav teaches the
    architecture. Sourcing → Screening → Diligence → Decision, plus the Thesis lens. */
@@ -25,7 +27,7 @@ const PAGES = [
   { key: "network", n: "7", label: "Sourcing Network" },
   { key: "methodology", n: "8", label: "Methodology" },
 ] as const;
-type PageKey = (typeof PAGES)[number]["key"];
+type PageKey = (typeof PAGES)[number]["key"] | "company";
 
 function useTheme(): [string, () => void] {
   const [t, setT] = useState(
@@ -77,6 +79,13 @@ export default function App() {
   // Empty id resets to the picker (the "all founders…" option in page switchers).
   const openDiligence = (id: string) => { setFounderId(id || null); setPage("diligence"); };
   const openDecision = (id: string) => { setFounderId(id || null); setPage("decision"); };
+  // Every company name in the app lands on the Company page; memo links open its memo tab.
+  const [coTab, setCoTab] = useState<CoTab>("overview");
+  const openCompany = (id: string, tab: CoTab = "overview") => {
+    if (!id) return;
+    setFounderId(id); setCoTab(tab); setPage("company");
+  };
+  const openCompanyMemo = (id: string) => openCompany(id, "memo");
 
   if (!entered) {
     return <Landing onEnter={() => { sessionStorage.setItem("entered", "1"); setEntered(true); }} />;
@@ -133,10 +142,14 @@ export default function App() {
       </nav>
 
       <main className="main">
-        {page === "sourcing" && (
-          <Sourcing thesis={thesis} openFounder={openDiligence} openMemo={openDecision} />
+        {page === "company" && founderId && (
+          <CompanyPage id={founderId} thesis={thesis} tab={coTab} setTab={setCoTab}
+            openLedger={openDiligence} openMemo={openDecision} />
         )}
-        {page === "screening" && <Screening thesis={thesis} openFounder={openDecision} />}
+        {page === "sourcing" && (
+          <Sourcing thesis={thesis} openFounder={openCompany} openMemo={openCompanyMemo} />
+        )}
+        {page === "screening" && <Screening thesis={thesis} openFounder={openCompany} />}
         {page === "diligence" && (
           <Diligence thesis={thesis} founderId={founderId}
             founders={memoFounders} openFounder={openDiligence} openMemo={openDecision} />
@@ -147,9 +160,9 @@ export default function App() {
         )}
         {page === "thesis" && (
           <ThesisPage theses={theses} thesis={thesis} setThesis={setThesis}
-            refreshTheses={refreshTheses} openFounder={openDecision} />
+            refreshTheses={refreshTheses} openFounder={openCompany} />
         )}
-        {page === "compare" && <Compare thesis={thesis} openFounder={openDecision} />}
+        {page === "compare" && <Compare thesis={thesis} openFounder={openCompany} />}
         {page === "network" && <NetworkPage />}
         {page === "methodology" && <MethodologyPage />}
       </main>

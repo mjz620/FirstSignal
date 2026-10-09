@@ -874,3 +874,40 @@ table.cmp .cmp-sep td { border-top: 2px solid var(--line); }
 .login-demo { align-self: flex-start; }
 .firm-guest { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
   color: var(--muted); margin-left: 6px; vertical-align: middle; }
+
+/* --- Company page ---------------------------------------------------------- */
+.co-head { margin-bottom: 18px; }
+.co-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.co-title { font-family: var(--serif); font-size: 34px; font-weight: 400; margin: 0; letter-spacing: -0.01em; }
+.co-one { font-family: var(--serif); font-size: 17px; margin: 6px 0 10px; max-width: 760px; }
+.co-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.co-meta b { color: var(--fg); font-weight: 500; }
+.co-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.co-stage { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.co-stage .control { width: auto; }
+.co-hint { font-size: 11px; }
+.co-next { width: 240px; }
+.co-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+.co-tab { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  padding: 8px 12px; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer; }
+.co-tab.on { color: var(--fg); border-bottom-color: var(--accent); }
+.co-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .co-grid { grid-template-columns: 1fr; } }
+.kv { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+.kv td { padding: 5px 8px 5px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.kv-k { color: var(--muted); width: 38%; }
+.kv-v { font-variant-numeric: tabular-nums; }
+.kv-s { text-align: right; font-size: 12px; color: var(--muted); }
+.kv-s a { color: var(--muted); }
+.gapline { margin: 4px 0; }
+.co-gap-acts { display: flex; gap: 8px; margin-top: 10px; }
+.co-outreach { margin-top: 10px; font-size: 13px; }
+.outreach-body { white-space: pre-wrap; font: inherit; font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+.co-axis { margin: 4px 0; text-transform: capitalize; }
+.co-case { white-space: pre-wrap; font-size: 13.5px; }
+.tl { list-style: none; padding: 0; margin: 0; }
+.tl-item { display: grid; grid-template-columns: 92px auto 1fr auto; gap: 10px; align-items: baseline;
+  padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.tl-date { color: var(--muted); font-variant-numeric: tabular-nums; }
+.tl-text { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .tl-item { grid-template-columns: 1fr; gap: 4px; } }

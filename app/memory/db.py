@@ -204,6 +204,15 @@ CREATE TABLE IF NOT EXISTS outreach (
     PRIMARY KEY (founder_id, signal_id)
 );
 
+-- Pipeline state per company (per firm): the investor's own stage + next step.
+-- Absent row = stage derived mechanically from what the pipeline has produced.
+CREATE TABLE IF NOT EXISTS company_state (
+    founder_id TEXT PRIMARY KEY,
+    stage      TEXT NOT NULL,           -- new|researching|diligence|decision|invested|passed
+    next_step  TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL
+);
+
 -- Thesis Engine configs, one row per lens. Per-firm: lives in every firm store.
 -- Results (axis_scores, memos, kill_log) still key on the thesis *name*.
 CREATE TABLE IF NOT EXISTS theses (
@@ -276,6 +285,7 @@ _PG_PK = {
     "latency": ("founder_id", "stage"),
     "outreach": ("founder_id", "signal_id"),
     "theses": ("slug",),
+    "company_state": ("founder_id",),
     "firms": ("slug",),
     "users": ("id",),
     "sessions": ("id",),
