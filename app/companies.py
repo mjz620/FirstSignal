@@ -52,6 +52,18 @@ def facts(signals: list[dict]) -> list[dict]:
     return [best[k] for k in _FACT_ORDER if k in best]
 
 
+# Enrichment sources (diligence-time retrieval) are not how a company was found.
+_ENRICHMENT = {"web", "tavily"}
+
+
+def found_via(signals: list[dict]) -> str:
+    """The earliest sourcing-channel signal; enrichment rows never count."""
+    for s in reversed(signals):  # signals are newest first
+        if s["source"] not in _ENRICHMENT:
+            return s["source"]
+    return signals[-1]["source"] if signals else "unknown"
+
+
 def links(signals: list[dict], entity_keys: dict) -> list[dict]:
     out, seen = [], set()
     if entity_keys.get("domain"):
@@ -136,7 +148,7 @@ def build(conn, fid: str, thesis) -> dict | None:
     return {
         "id": fid, "name": name, "company": (company or name).strip(),
         "person": person.strip() if person else None,
-        "first_seen": f["first_seen"], "source": sigs[-1]["source"] if sigs else "unknown",
+        "first_seen": f["first_seen"], "source": found_via(sigs),
         "links": links(sigs, entity_keys),
         "stage": state["stage"] if state else derive_stage(conn, fid, brief, rs, thesis.name),
         "next_step": state["next_step"] if state else "",

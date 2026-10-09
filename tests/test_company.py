@@ -43,6 +43,9 @@ def test_facts_are_parsed_and_sourced(conn):
     assert r["links"][0]["url"] == "https://tracewell.dev"
     assert "/commits" not in "".join(l["url"] for l in r["links"])
     assert r["stage"] == "new" and r["stage_set_by_user"] is False
+    assert r["source"] == "hn"  # earliest channel signal
+    assert companies.found_via([{"source": "web"}, {"source": "tavily"}]) == "tavily"
+    assert companies.found_via([{"source": "github"}, {"source": "web"}]) == "github"
     assert r["evidence"] == [] and r["memo_md"] is None
     assert client.get("/api/companies/nope").status_code == 404
 
