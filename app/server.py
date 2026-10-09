@@ -7,18 +7,17 @@ import threading
 from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import datetime, timezone
-from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, deck_pdf, instrument, ratelimit
+from . import auth, config, deck_pdf, instrument, ratelimit
+from . import theses as thesis_store
 from .decision import decision as dec
 from .memory import db, founder_score, ingest
 from .screening import axes as axes_mod
-from .screening import thesis as thesis_mod
 
 app = FastAPI(title="FirstSignal")
 _DIST = config.ROOT / "frontend" / "dist"
@@ -35,13 +34,49 @@ app.include_router(_quality_api.router)
 
 @app.on_event("startup")
 def _seed_on_boot():
-    """Deployed cold start must never be empty; no-op when founders exist."""
+    """Deployed cold start must never be empty; no-op when founders exist.
+    Runs with no firm set, i.e. against the demo (default) store."""
     from . import seed
     try:
         if seed.ensure_seeded():
             print("[seed] loaded snapshot into empty database")
     except Exception as e:  # a bad snapshot must not take the API down
         print(f"[seed] skipped: {type(e).__name__}: {e}")
+    try:
+        conn = _conn()
+        db.init_control(conn)
+        if thesis_store.import_all_yaml(conn):
+            print("[theses] imported config/thesis_*.yaml into the demo firm")
+        firm, created = auth.ensure_demo_firm()
+        if created:  # printed once: the only way to join the pre-existing demo data
+            print(f"[auth] demo firm registered — invite code: {firm.invite_code}")
+    except Exception as e:
+        print(f"[auth] control-store init failed: {type(e).__name__}: {e}")
+
+
+# --- auth: every /api route except /api/auth/* needs a session; the cookie's
+# firm selects the store that db.connect() opens for the rest of the request.
+# Sync endpoints run in a threadpool that copies this context (anyio), so handlers,
+# routers and _conn() all see the firm without passing it around.
+_PUBLIC_PREFIX = "/api/auth/"
+
+
+@app.middleware("http")
+async def _firm_scope(request: Request, call_next):
+    path = request.url.path
+    if not path.startswith("/api/") or path.startswith(_PUBLIC_PREFIX):
+        return await call_next(request)
+    if request.method != "GET" and request.headers.get("sec-fetch-site") == "cross-site":
+        return JSONResponse({"detail": "cross-site request rejected"}, status_code=403)
+    user = auth.resolve_request(request)
+    if user is None:
+        return JSONResponse({"detail": "sign in to continue"}, status_code=401)
+    request.state.user = user
+    token = db.current_firm.set(None if user.firm.slug == db.DEMO_FIRM else user.firm.slug)
+    try:
+        return await call_next(request)
+    finally:
+        db.current_firm.reset(token)
 
 
 def _conn():
@@ -50,11 +85,15 @@ def _conn():
     return c
 
 
-def _thesis(name: str | None):
-    path = config.ROOT / (name or "config/thesis_preseed_ai_infra.yaml")
-    if not path.exists():
+def _thesis(conn, slug: str | None):
+    """A lens from the ACTIVE firm's theses table; None = the default lens."""
+    t = thesis_store.get(conn, slug or thesis_store.DEFAULT_SLUG)
+    if t is None and slug is None:  # firm store predates the table being filled
+        thesis_store.import_default(conn)
+        t = thesis_store.get(conn, thesis_store.DEFAULT_SLUG)
+    if t is None:
         raise HTTPException(404, "thesis not found")
-    return thesis_mod.load_thesis(path)
+    return t
 
 
 def _source_of(conn, founder_id: str) -> str:
@@ -107,15 +146,19 @@ def _tracked_stage(conn, founder_id: str, name: str):
 instrument.stage = _tracked_stage
 
 
-def _run_pipeline_bg(fid: str, thesis_file: str | None, *, market: bool = True) -> None:
+def _run_pipeline_bg(fid: str, thesis_slug: str | None, firm: str | None, *,
+                     market: bool = True) -> None:
     """Background thread: full diligence on a fresh conn; errors land in run_status,
     never swallowed. market=True adds live Tavily market research (inbound applies);
     a forced diligence on an already-sourced founder skips it — the founder/traction
-    analysis and decision are the point, and it keeps the run fast and dependency-free."""
+    analysis and decision are the point, and it keeps the run fast and dependency-free.
+    A new thread does NOT inherit the request's context, so the firm is passed in
+    explicitly and set first — every _conn() below (incl. _set_stage) depends on it."""
+    db.current_firm.set(firm)
     try:
         from .diligence import pipeline
         conn = _conn()
-        t = _thesis(thesis_file)
+        t = _thesis(conn, thesis_slug)
         # News enrichment is intentionally OFF — general news feeds the founder-integrity
         # worker noisy web bios that manufacture false contradictions on real people;
         # it needs source-quality guardrails before it's safe to auto-enable.
@@ -160,7 +203,7 @@ def scan(request: Request, source: str, topic: str | None = None,
     if source not in valid:
         raise HTTPException(422, f"source must be one of: {', '.join(valid)}")
     conn = _conn()
-    t = _thesis(thesis)
+    t = _thesis(conn, thesis)
     topics = scanner.topics_for(t, topic)
     res = scanner.run_scan(conn, topics, replay=False, limit_per=5, sources=[source])
     founders = []
@@ -240,19 +283,20 @@ def founder_summary(founder_id: str, request: Request, thesis: str | None = None
 
 @app.get("/api/theses")
 def theses():
-    out = []
-    for p in sorted((config.ROOT / "config").glob("thesis_*.yaml")):
-        t = thesis_mod.load_thesis(p)
-        # full config, not just the name: the Thesis page loads one back into the
-        # editor, so the client needs the fields it is about to edit.
-        out.append({"file": f"config/{p.name}", **asdict(t)})
+    # full config, not just the name: the Thesis page loads one back into the
+    # editor, so the client needs the fields it is about to edit.
+    conn = _conn()
+    out = thesis_store.list_theses(conn)
+    if not out:  # a firm store that predates the theses table
+        thesis_store.import_default(conn)
+        out = thesis_store.list_theses(conn)
     return out
 
 
 @app.get("/api/founders")
 def founders(thesis: str | None = None):
     conn = _conn()
-    t = _thesis(thesis)
+    t = _thesis(conn, thesis)
     ids = [r["fid"] for r in conn.execute(
         "SELECT DISTINCT founder_id fid FROM axis_scores").fetchall()]
     if not ids:
@@ -298,7 +342,7 @@ def founders(thesis: str | None = None):
 @app.get("/api/founders/{founder_id}")
 def founder(founder_id: str, thesis: str | None = None):
     conn = _conn()
-    t = _thesis(thesis)
+    t = _thesis(conn, thesis)
     brief = dec.build(conn, founder_id, t)
     claims = [c.model_dump() for c in ingest.get_claims(conn, founder_id)]
     brief["claims"] = claims  # for click-to-evidence
@@ -338,7 +382,7 @@ def sourcing(thesis: str | None = None):
     thesis-topic match + signal count. Includes the drop-log tally — 'nothing
     discarded' rendered as a feature."""
     conn = _conn()
-    t = _thesis(thesis)
+    t = _thesis(conn, thesis)
     # Founder name/keys folded into the aggregate (1:1 with founder_id, so listing them
     # in GROUP BY is engine-portable) — removes one per-founder lookup from the loop.
     rows = conn.execute(
@@ -538,7 +582,7 @@ def _intake(company: str, deck_text: str, origin: str | None = None):
         _set_stage(fid, "screen", "running")
         try:
             from .screening import axes as axes_mod
-            res = axes_mod.screen(conn, fid, _thesis(None),
+            res = axes_mod.screen(conn, fid, _thesis(conn, None),
                                   replay=config.replay_enabled(None))
             screened = True
             if res.get("killed"):
@@ -560,7 +604,8 @@ def _intake(company: str, deck_text: str, origin: str | None = None):
 
     run_started = screened and not killed
     if run_started:
-        threading.Thread(target=_run_pipeline_bg, args=(fid, None), daemon=True).start()
+        threading.Thread(target=_run_pipeline_bg, args=(fid, None, db.current_firm.get()),
+                         daemon=True).start()
     return {"founder_id": fid, "signal_id": sid, "duplicate": not inserted,
             "screened": screened, "screen_error": screen_error, "killed": killed,
             "run_started": run_started}
@@ -611,7 +656,8 @@ def force_diligence(founder_id: str, request: Request, thesis: str | None = None
     _set_stage(founder_id, "screen", "ok", "forced into diligence — kill screen overridden")
     for st in ("extract", "adjudicate", "debate", "synthesize", "done"):
         _set_stage(founder_id, st, "queued")
-    threading.Thread(target=_run_pipeline_bg, args=(founder_id, thesis),
+    threading.Thread(target=_run_pipeline_bg,
+                     args=(founder_id, thesis, db.current_firm.get()),
                      kwargs={"market": False}, daemon=True).start()
     return {"founder_id": founder_id, "run_started": True,
             "already_running": False, "has_memo": has_memo, "forced": True}
@@ -636,7 +682,7 @@ def activate_founder(founder_id: str, request: Request, thesis: str | None = Non
     from . import activate as activate_mod
     from . import llm as llm_mod
     conn = _conn()
-    t = _thesis(thesis)
+    t = _thesis(conn, thesis)
     if llm_mod.provider() is None and not config.replay_enabled(None):
         raise HTTPException(409, "no LLM key and not in replay — cannot draft")
     try:
@@ -657,50 +703,97 @@ class ThesisConfig(BaseModel):
     ownership_target_pct: float
     risk_appetite: str
     topics: list[str]
-    replaces: str | None = None  # file being edited; removed when a rename moves it
-
-
-def _thesis_path(file: str) -> Path:
-    """Resolve a client-supplied thesis file. The name arrives from the browser, so
-    it must land inside config/ and look like a thesis config — nothing else."""
-    cfg_dir = (config.ROOT / "config").resolve()
-    p = (config.ROOT / file).resolve()
-    if p.parent != cfg_dir or not p.name.startswith("thesis_") or p.suffix != ".yaml":
-        raise HTTPException(400, "not a thesis config path")
-    if not p.exists():
-        raise HTTPException(404, "thesis not found")
-    return p
+    replaces: str | None = None  # slug being edited; removed when a rename moves it
 
 
 @app.post("/api/thesis")
 def save_thesis(body: ThesisConfig):
     """Thesis Engine is configurable (brief FAQ 15): persist an investor-edited
-    thesis as a YAML config next to the built-ins. Pass `replaces` to edit an
-    existing one — renaming it moves the file rather than leaving an orphan."""
-    import re as _re
-
-    import yaml
-    slug = _re.sub(r"[^a-z0-9]+", "_", body.name.lower()).strip("_") or "custom"
-    path = config.ROOT / "config" / f"thesis_{slug}.yaml"
-    old = _thesis_path(body.replaces) if body.replaces else None
-    path.write_text(yaml.safe_dump(body.model_dump(exclude={"replaces"}),
-                                   sort_keys=False))
-    if old and old != path:
-        old.unlink()
-    return {"file": f"config/{path.name}", "name": body.name}
+    thesis in the firm's theses table. Pass `replaces` to edit an existing one —
+    renaming it replaces the old row rather than leaving an orphan."""
+    conn = _conn()
+    try:
+        slug = thesis_store.save(conn, body.model_dump(exclude={"replaces"}),
+                                 replaces=body.replaces)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"slug": slug, "name": body.name}
 
 
 @app.delete("/api/thesis")
-def delete_thesis(file: str):
-    """Delete a thesis config. The engine always needs one lens, so the last one
-    can't go — that's a 409, not a silent no-op."""
-    path = _thesis_path(file)
-    remaining = sorted(p for p in (config.ROOT / "config").glob("thesis_*.yaml")
-                       if p != path)
-    if not remaining:
-        raise HTTPException(409, "cannot delete the last thesis — the engine needs a lens")
-    path.unlink()
-    return {"deleted": f"config/{path.name}", "next": f"config/{remaining[0].name}"}
+def delete_thesis(slug: str):
+    """Delete a thesis. The engine always needs one lens, so the last one can't
+    go — that's a 409, not a silent no-op."""
+    conn = _conn()
+    try:
+        nxt = thesis_store.delete(conn, slug)
+    except LookupError:
+        raise HTTPException(404, "thesis not found")
+    except ValueError as e:
+        raise HTTPException(409, str(e))
+    return {"deleted": slug, "next": nxt}
+
+
+# --- accounts ----------------------------------------------------------------
+class SignupBody(BaseModel):
+    email: str
+    password: str
+    firm_name: str | None = None
+    invite_code: str | None = None
+
+
+class LoginBody(BaseModel):
+    email: str
+    password: str
+
+
+def _me(user: auth.User) -> dict:
+    return {"email": user.email, "firm": asdict(user.firm)}
+
+
+def _signed_in(request: Request, user: auth.User, token: str) -> JSONResponse:
+    resp = JSONResponse(_me(user))
+    resp.set_cookie(value=token, **auth.cookie_kwargs(request))
+    return resp
+
+
+@app.post("/api/auth/signup")
+def auth_signup(body: SignupBody, request: Request):
+    """Create a firm (its own segregated store, seeded with the demo data and the
+    default lens) or join one with its invite code."""
+    ratelimit.check("login", request)
+    try:
+        user, token = auth.signup(body.email, body.password,
+                                  firm_name=body.firm_name, invite_code=body.invite_code)
+    except auth.AuthError as e:
+        raise HTTPException(e.status, e.detail)
+    return _signed_in(request, user, token)
+
+
+@app.post("/api/auth/login")
+def auth_login(body: LoginBody, request: Request):
+    ratelimit.check("login", request)
+    try:
+        user, token = auth.login(body.email, body.password)
+    except auth.AuthError as e:
+        raise HTTPException(e.status, e.detail)
+    return _signed_in(request, user, token)
+
+
+@app.post("/api/auth/logout")
+def auth_logout(request: Request):
+    auth.logout(request.cookies.get(auth.COOKIE))
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(auth.COOKIE, path="/")
+    return resp
+
+
+@app.get("/api/auth/me")
+def auth_me(request: Request):
+    user = auth.resolve_request(request)
+    if user is None:
+        raise HTTPException(401, "sign in to continue")
+    return _me(user)
 
 
 class AskBody(BaseModel):
@@ -748,7 +841,7 @@ def ask_memo(founder_id: str, body: AskBody, request: Request):
 @app.get("/api/killed")
 def killed(thesis: str | None = None):
     conn = _conn()
-    t = _thesis(thesis)
+    t = _thesis(conn, thesis)
     # One row per founder, carrying their LATEST kill reason. A bare `GROUP BY
     # founder_id` selecting an ungrouped `reason` is legal in SQLite but Postgres
     # rejects it, so this endpoint 500'd in deploy while the tests (SQLite) passed.

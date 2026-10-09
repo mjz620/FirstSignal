@@ -18,3 +18,17 @@ def _reset_ratelimit():
     from app import ratelimit
     ratelimit._hits.clear()
     yield
+
+
+@pytest.fixture(autouse=True)
+def _demo_session(request, monkeypatch):
+    """API tests run as a signed-in demo-firm user without cookie plumbing: the one
+    cookie-resolution function is patched. Tests marked `real_auth` exercise it."""
+    if "real_auth" in request.keywords:
+        yield
+        return
+    from app import auth
+    demo = auth.User(id="test-user", email="test@demo.local",
+                     firm=auth.Firm(slug="demo", name="Demo", invite_code="demo-code"))
+    monkeypatch.setattr(auth, "resolve_request", lambda r: demo)
+    yield

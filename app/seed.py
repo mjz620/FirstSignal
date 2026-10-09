@@ -15,6 +15,8 @@ SNAPSHOT = config.FIXTURES / "seed_db.sqlite"
 TABLES = ["founders", "signals", "claims", "resolutions", "droplog", "axis_scores",
           "adjudications", "memos", "latency", "kill_log", "outreach"]
 _SMOKE = "founder-smoke"
+# Never part of a snapshot: accounts, and the per-firm thesis table (seeded separately).
+_PRIVATE = ["sessions", "users", "firms", "theses"]
 
 
 def snapshot() -> None:
@@ -26,6 +28,8 @@ def snapshot() -> None:
     conn = sqlite3.connect(SNAPSHOT)
     conn.execute("DROP TRIGGER IF EXISTS signals_no_update")
     conn.execute("DROP TRIGGER IF EXISTS signals_no_delete")
+    for t in _PRIVATE:
+        conn.execute(f"DROP TABLE IF EXISTS {t}")
     for t in TABLES:
         col = "id" if t == "founders" else "founder_id"
         try:
@@ -59,4 +63,32 @@ def ensure_seeded() -> bool:
             target.execute(sql, tuple(r[c] for c in cols))
         print(f"seeded {t}: {len(rows)} rows")
     target.commit()
+    return True
+
+
+def seed_firm(conn) -> bool:
+    """Seed a NEW firm store in bulk (one INSERT..SELECT per table, not ~700 row
+    inserts over the Supabase pooler). SQLite copies from the snapshot file; Postgres
+    copies from the already-seeded demo schema (public). Column lists come from the
+    snapshot so an older snapshot still loads into a newer schema."""
+    if not SNAPSHOT.exists():
+        return False
+    if conn.execute("SELECT COUNT(*) c FROM founders").fetchone()["c"] > 0:
+        return False
+    src = sqlite3.connect(SNAPSHOT)
+    cols = {t: [r[1] for r in src.execute(f"PRAGMA table_info({t})").fetchall()]
+            for t in TABLES}
+    src.close()
+    pg = isinstance(conn, db.PgConnection)
+    if not pg:
+        conn.execute("ATTACH DATABASE ? AS seed", (str(SNAPSHOT),))
+    for t in TABLES:
+        if not cols[t]:
+            continue
+        c = ", ".join(cols[t])
+        origin = f"public.{t}" if pg else f"seed.{t}"
+        conn.execute(f"INSERT INTO {t} ({c}) SELECT {c} FROM {origin}")
+    conn.commit()
+    if not pg:
+        conn.execute("DETACH DATABASE seed")
     return True

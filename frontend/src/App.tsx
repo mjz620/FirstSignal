@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import * as api from "./api";
-import type { FounderRow, Thesis } from "./api";
+import type { FounderRow, Me, Thesis } from "./api";
+import Login from "./pages/Login";
 import Sourcing from "./pages/Sourcing";
 import Screening from "./pages/Screening";
 import Diligence from "./pages/Diligence";
@@ -43,18 +44,35 @@ export default function App() {
   const [entered, setEntered] = useState(() => sessionStorage.getItem("entered") === "1");
   const [page, setPage] = useState<PageKey>("sourcing");
   const [theses, setTheses] = useState<Thesis[]>([]);
-  const [thesis, setThesis] = useState("config/thesis_preseed_ai_infra.yaml");
+  const [thesis, setThesis] = useState("preseed_ai_infra");
   const [founderId, setFounderId] = useState<string | null>(null);
   const [memoFounders, setMemoFounders] = useState<{ id: string; name: string }[]>([]);
+  // undefined = still checking the session; null = signed out.
+  const [me, setMe] = useState<Me | null | undefined>(undefined);
+  const [copied, setCopied] = useState(false);
 
-  const refreshTheses = useCallback(() => { api.getTheses().then(setTheses).catch(() => {}); }, []);
-  useEffect(refreshTheses, [refreshTheses]);
+  useEffect(() => { api.me().then(setMe).catch(() => setMe(null)); }, []);
   useEffect(() => {
+    const out = () => setMe(null);
+    window.addEventListener("fs:unauthorized", out);
+    return () => window.removeEventListener("fs:unauthorized", out);
+  }, []);
+
+  const refreshTheses = useCallback(() => {
+    api.getTheses().then((ts) => {
+      setTheses(ts);
+      // A firm's lenses are its own: never leave a slug selected that it doesn't have.
+      setThesis((cur) => (ts.some((t) => t.slug === cur) ? cur : (ts[0]?.slug ?? cur)));
+    }).catch(() => {});
+  }, []);
+  useEffect(() => { if (me) refreshTheses(); }, [refreshTheses, me]);
+  useEffect(() => {
+    if (!me) return;
     api.getFounders(thesis)
       .then((fs: FounderRow[]) =>
         setMemoFounders(fs.filter((f) => f.has_memo).map((f) => ({ id: f.id, name: f.name }))))
       .catch(() => {});
-  }, [thesis, page]); // page dep: a live apply run may have landed a new memo
+  }, [thesis, page, me]); // page dep: a live apply run may have landed a new memo
 
   // Empty id resets to the picker (the "all founders…" option in page switchers).
   const openDiligence = (id: string) => { setFounderId(id || null); setPage("diligence"); };
@@ -63,6 +81,15 @@ export default function App() {
   if (!entered) {
     return <Landing onEnter={() => { sessionStorage.setItem("entered", "1"); setEntered(true); }} />;
   }
+  if (me === undefined) return null;  // one paint while the session is checked
+  if (me === null) return <Login onSignedIn={setMe} />;
+
+  const signOut = () => { api.logout().catch(() => {}); setMe(null); };
+  const copyInvite = () => {
+    navigator.clipboard?.writeText(me.firm.invite_code).then(() => {
+      setCopied(true); setTimeout(() => setCopied(false), 1500);
+    }).catch(() => {});
+  };
 
   return (
     <div className="shell">
@@ -80,8 +107,20 @@ export default function App() {
           <label className="side-label" htmlFor="thesis-lens">Thesis lens — every page runs through it</label>
           <select id="thesis-lens" className="control" value={thesis}
             onChange={(e) => setThesis(e.target.value)} title="fund thesis lens">
-            {theses.map((t) => <option key={t.file} value={t.file}>{t.name}</option>)}
+            {theses.map((t) => <option key={t.slug} value={t.slug}>{t.name}</option>)}
           </select>
+          <div className="firm-box" title={me.email}>
+            <div className="firm-name">{me.firm.name}</div>
+            <div className="firm-row">
+              <span className="firm-code" title="colleagues join your firm with this code">
+                invite {me.firm.invite_code}
+              </span>
+              <button className="minibtn" onClick={copyInvite} aria-label="copy invite code">
+                {copied ? "copied" : "copy"}
+              </button>
+              <button className="minibtn" onClick={signOut}>Sign out</button>
+            </div>
+          </div>
           <button className="control" onClick={toggle} title="toggle theme">
             {theme === "dark" ? "☀ Light theme" : "☾ Dark theme"}
           </button>

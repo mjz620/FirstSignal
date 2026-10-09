@@ -249,6 +249,8 @@ def cmd_decision(args) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(prog="vc-brain")
     parser.add_argument("--replay", action="store_true", help="read only from cache")
+    parser.add_argument("--firm", default=None,
+                        help="operate on this firm's store (default: the demo store)")
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init", help="create vc_brain.db").set_defaults(func=cmd_init)
     sub.add_parser("demo", help="run the Block 1 gate demo").set_defaults(func=cmd_demo)
@@ -288,7 +290,9 @@ def main() -> None:
     p_dec.set_defaults(func=cmd_decision)
 
     args = parser.parse_args()
-    args.func(args)
+    from app.memory import db
+    with db.firm_scope(args.firm):
+        args.func(args)
 
 
 if __name__ == "__main__":

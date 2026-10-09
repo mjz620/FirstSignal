@@ -97,8 +97,26 @@ cd frontend && npm install && npm run dev    # or: npm run build
 | `VC_REPLAY=1` | Force cache-only mode; a cache miss fails instead of calling out. |
 | `VC_MAX_ADJUDICATIONS` | Cap on adversarial adjudications per run (default 6). |
 
-Theses live in `config/*.yaml` and drive both the sourcing scanner and the scoring
-lens. Worker prompts and rubrics are in `prompts/` and are hand-tuned.
+Built-in theses live in `config/*.yaml`; at runtime each firm keeps its own copies in
+a `theses` table and edits them from the Thesis page. A thesis drives both the
+sourcing scanner and the scoring lens. Worker prompts and rubrics are in `prompts/`
+and are hand-tuned.
+
+---
+
+## Accounts and firms
+
+Every API route needs a session. Sign-up creates a **firm** (or joins one with its
+invite code, shown in the sidebar) and sets an HttpOnly cookie. Each firm gets a
+segregated store — a Postgres schema `firm_<slug>` in deployment, a SQLite file
+`firms/<slug>.db` locally — seeded with the demo founders and the default lens, so
+nothing is ever visible across firms. Accounts (`firms`, `users`, `sessions`) live
+only in the default store and are stripped from `fixtures/seed_db.sqlite` by
+`scripts/seed.py --snapshot`.
+
+The pre-existing data is the `demo` firm and stays in the default store; the CLI and
+scripts operate on it unless you pass `--firm <slug>`. The demo firm's invite code is
+printed to the server log the first time it boots with the control tables present.
 
 ---
 

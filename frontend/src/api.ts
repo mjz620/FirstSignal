@@ -70,7 +70,7 @@ export interface AskResult {
   validated: boolean;
 }
 export interface Thesis {
-  file: string;
+  slug: string;
   name: string;
   sectors: string[];
   stage: string;
@@ -296,6 +296,10 @@ const FRIENDLY: Record<number, string> = {
 };
 async function j<T>(u: string, init?: RequestInit): Promise<T> {
   const r = await fetch(u, init);
+  if (r.status === 401 && !u.startsWith("/api/auth/")) {
+    // Session gone (expired, signed out elsewhere): the shell drops to the login card.
+    window.dispatchEvent(new Event("fs:unauthorized"));
+  }
   if (!r.ok) {
     const detail = await r.json().catch(() => null);
     throw new Error(detail?.detail || FRIENDLY[r.status]
@@ -387,11 +391,28 @@ export const getMethodology = (founderId?: string): Promise<Methodology> => {
   return p;
 };
 export const saveThesis = (cfg: object) =>
-  j<Thesis>("/api/thesis", {
+  j<{ slug: string; name: string }>("/api/thesis", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(cfg),
   });
-export const deleteThesis = (file: string) =>
+export const deleteThesis = (slug: string) =>
   j<{ deleted: string; next: string }>(
-    `/api/thesis?file=${encodeURIComponent(file)}`, { method: "DELETE" });
+    `/api/thesis?slug=${encodeURIComponent(slug)}`, { method: "DELETE" });
+
+/* Accounts. The session is an HttpOnly cookie, so same-origin fetches and the
+   plain <a href> PDF links carry it without any client-side token handling. */
+export interface Me {
+  email: string;
+  firm: { slug: string; name: string; invite_code: string };
+}
+const post = <T,>(u: string, body: object) =>
+  j<T>(u, { method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body) });
+export const me = () => j<Me>("/api/auth/me");
+export const login = (email: string, password: string) =>
+  post<Me>("/api/auth/login", { email, password });
+export const signup = (body: { email: string; password: string; firm_name?: string;
+                               invite_code?: string }) =>
+  post<Me>("/api/auth/signup", body);
+export const logout = () => post<{ ok: boolean }>("/api/auth/logout", {});

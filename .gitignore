@@ -7,6 +7,7 @@ __pycache__/
 
 # VC Brain runtime artifacts (created by later blocks)
 vc_brain.db
+firms/
 app/cache/live/
 
 # Frontend

@@ -46,12 +46,12 @@ function ThesisList({ theses, thesis, setThesis, refreshTheses }: {
 
   const del = async (t: Thesis) => {
     if (!window.confirm(
-      `Delete the "${t.name}" thesis? This removes ${t.file} from disk.`)) return;
+      `Delete the "${t.name}" thesis? This removes it from your firm's lenses.`)) return;
     setErr(null);
     try {
-      const r = await api.deleteThesis(t.file);
-      if (editing !== "new" && editing?.file === t.file) setEditing(null);
-      if (t.file === thesis) setThesis(r.next);  // never leave a dead lens selected
+      const r = await api.deleteThesis(t.slug);
+      if (editing !== "new" && editing?.slug === t.slug) setEditing(null);
+      if (t.slug === thesis) setThesis(r.next);  // never leave a dead lens selected
       refreshTheses();
     } catch (e) {
       setErr((e as Error).message);
@@ -67,15 +67,15 @@ function ThesisList({ theses, thesis, setThesis, refreshTheses }: {
       </div>
       <p className="th-help">
         Click a thesis to make it the active lens — every page re-runs through it.
-        Edit changes it in place; deleting removes its config file.
+        Edit changes it in place; deleting removes it from your firm.
       </p>
       {err && <Err msg={err} />}
       <div className="th-list">
         {theses.map((t) => {
-          const on = t.file === thesis;
+          const on = t.slug === thesis;
           return (
-            <div key={t.file} className={`th-row ${on ? "on" : ""}`}>
-              <button className="th-pick" onClick={() => setThesis(t.file)} aria-pressed={on}>
+            <div key={t.slug} className={`th-row ${on ? "on" : ""}`}>
+              <button className="th-pick" onClick={() => setThesis(t.slug)} aria-pressed={on}>
                 <span className="th-name">{t.name}{on && <span className="th-active">active lens</span>}</span>
                 <span className="th-meta">
                   {t.stage} · {t.sectors.join(", ")} · ${t.check_size_usd.toLocaleString()} ·{" "}
@@ -94,10 +94,10 @@ function ThesisList({ theses, thesis, setThesis, refreshTheses }: {
       </div>
       {editing && (
         <ThesisEditor
-          key={editing === "new" ? "new" : editing.file}
+          key={editing === "new" ? "new" : editing.slug}
           init={editing === "new" ? null : editing}
           onCancel={() => setEditing(null)}
-          onSaved={(file) => { setEditing(null); refreshTheses(); setThesis(file); }} />
+          onSaved={(slug) => { setEditing(null); refreshTheses(); setThesis(slug); }} />
       )}
     </>
   );
@@ -110,7 +110,7 @@ const BLANK = {
 };
 
 function ThesisEditor({ init, onCancel, onSaved }: {
-  init: Thesis | null; onCancel: () => void; onSaved: (file: string) => void;
+  init: Thesis | null; onCancel: () => void; onSaved: (slug: string) => void;
 }) {
   const [cfg, setCfg] = useState(init ? {
     name: init.name, sectors: init.sectors.join(", "), stage: init.stage,
@@ -131,9 +131,9 @@ function ThesisEditor({ init, onCancel, onSaved }: {
         topics: list(cfg.topics),
         check_size_usd: Number(cfg.check_size_usd),
         ownership_target_pct: Number(cfg.ownership_target_pct),
-        replaces: init?.file ?? null,
+        replaces: init?.slug ?? null,
       });
-      onSaved(t.file);
+      onSaved(t.slug);
     } catch (e) {
       setState(`⚠ ${(e as Error).message}`);
     }
@@ -169,7 +169,7 @@ function ThesisEditor({ init, onCancel, onSaved }: {
       </div>
       {renamed && (
         <p className="th-help" aria-live="polite">
-          Renaming moves the config file — the old {init!.file} is removed on save.
+          Renaming replaces the existing thesis — scores recorded under the old name stay with it.
         </p>
       )}
       {state?.startsWith("⚠") && <Err msg={state.slice(2)} />}

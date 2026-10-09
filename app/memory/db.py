@@ -11,13 +11,50 @@ The signals table is enforced append-only by triggers on BOTH engines — "nothi
 discarded" is a brief requirement and the append-only table *is* the compliance
 story (spec §2.1).
 """
+import contextvars
 import os
 import re
 import sqlite3
 import threading
 import weakref
+from contextlib import contextmanager
+from pathlib import Path
 
 from .. import config
+
+# ---------------------------------------------------------------------------
+# Firm scope. Each firm owns a separate store: a Postgres schema (firm_<slug>) or a
+# SQLite file (firms/<slug>.db). The pre-existing data is the "demo" firm and keeps
+# living in the default store (public schema / vc_brain.db), so the CLI, scripts and
+# tests — which never set a firm — behave exactly as before.
+# ---------------------------------------------------------------------------
+DEMO_FIRM = "demo"
+_RESERVED = {DEMO_FIRM, "public", "seed", "main", "temp"}
+_SLUG_RE = re.compile(r"^[a-z][a-z0-9_]{0,40}$")
+current_firm: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "current_firm", default=None)
+
+
+def validate_slug(slug: str) -> str:
+    """Slugs become schema names and file names — reject anything else outright."""
+    if not isinstance(slug, str) or not _SLUG_RE.match(slug) or slug in _RESERVED \
+            or slug.startswith("pg_"):
+        raise ValueError(f"invalid firm slug: {slug!r}")
+    return slug
+
+
+def active_firm() -> str:
+    return current_firm.get() or DEMO_FIRM
+
+
+@contextmanager
+def firm_scope(slug: str | None):
+    """Run a block against one firm's store (None/"demo" = the default store)."""
+    token = current_firm.set(slug if slug and slug != DEMO_FIRM else None)
+    try:
+        yield
+    finally:
+        current_firm.reset(token)
 
 # Engine-neutral DDL (valid on SQLite and Postgres).
 _COMMON = """
@@ -166,6 +203,39 @@ CREATE TABLE IF NOT EXISTS outreach (
     created_at TEXT NOT NULL,
     PRIMARY KEY (founder_id, signal_id)
 );
+
+-- Thesis Engine configs, one row per lens. Per-firm: lives in every firm store.
+-- Results (axis_scores, memos, kill_log) still key on the thesis *name*.
+CREATE TABLE IF NOT EXISTS theses (
+    slug       TEXT PRIMARY KEY,
+    name       TEXT NOT NULL,
+    config     TEXT NOT NULL,           -- JSON of the Thesis dataclass
+    updated_at TEXT NOT NULL
+);
+"""
+
+# Control plane: accounts live ONLY in the default store, never in a firm store, so a
+# firm snapshot or schema dump can never carry credentials.
+CONTROL_SCHEMA = """
+CREATE TABLE IF NOT EXISTS firms (
+    slug        TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    invite_code TEXT NOT NULL UNIQUE,
+    created_at  TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS users (
+    id            TEXT PRIMARY KEY,
+    email         TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    firm_slug     TEXT NOT NULL REFERENCES firms(slug),
+    created_at    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sessions (
+    id         TEXT PRIMARY KEY,         -- sha256 of the cookie token
+    user_id    TEXT NOT NULL REFERENCES users(id),
+    firm_slug  TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+);
 """
 
 # Append-only guard: the signals table cannot be updated or deleted from.
@@ -205,6 +275,10 @@ _PG_PK = {
     "memos": ("founder_id", "thesis"),
     "latency": ("founder_id", "stage"),
     "outreach": ("founder_id", "signal_id"),
+    "theses": ("slug",),
+    "firms": ("slug",),
+    "users": ("id",),
+    "sessions": ("id",),
 }
 
 _RE_IOR = re.compile(r"^\s*INSERT\s+OR\s+REPLACE\s+INTO\s+(\w+)\s*\(([^)]+)\)", re.I)
@@ -248,22 +322,46 @@ class PgConnection:
     """Duck-types the sqlite3.Connection surface the app uses:
     execute()/commit()/close(), with cursor.fetchone()/fetchall() dict rows.
     Returned to the pool when garbage-collected (CPython refcounting makes this
-    prompt at request end) or on explicit close()."""
+    prompt at request end) or on explicit close().
 
-    def __init__(self, raw, pool):
+    Firm scoping: `schema` (firm_<slug>, or None for the default public store) is
+    applied with `SET LOCAL search_path` as the FIRST statement of every transaction.
+    The Supabase pooler runs in transaction mode, so a session-level SET would not
+    survive a commit; psycopg opens a new implicit transaction on the next execute,
+    and the lazy re-arm below puts the SET back in front of it. search_path is the
+    firm schema alone — never `firm_x, public` — so a missing table can never fall
+    through to another firm's rows."""
+
+    def __init__(self, raw, pool, schema: str | None = None):
         self._raw = raw
+        self._schema = schema
+        self._armed = schema is None
         self._finalizer = weakref.finalize(self, _putback, pool, raw)
+
+    def _arm(self):
+        if not self._armed:
+            from psycopg import sql as _sql
+            self._raw.execute(_sql.SQL("SET LOCAL search_path TO {}").format(
+                _sql.Identifier(self._schema)))
+            self._armed = True
 
     def execute(self, sql: str, params=()):
         if sql.lstrip().upper().startswith("PRAGMA"):
             return _EmptyResult()
+        self._arm()
         return self._raw.execute(_to_pg(sql), params)
 
     def executescript(self, script: str):
+        self._arm()
         self._raw.execute(script)
 
     def commit(self):
         self._raw.commit()
+        self._armed = self._schema is None
+
+    def rollback(self):
+        self._raw.rollback()
+        self._armed = self._schema is None
 
     def close(self):
         self._finalizer()
@@ -271,7 +369,8 @@ class PgConnection:
 
 _pool = None
 _pool_lock = threading.Lock()
-_pg_initialized = False
+_pg_initialized: set[str] = set()      # schemas whose DDL has run in this process
+_sqlite_initialized: set[str] = set()  # firm db files known to exist
 
 
 def _get_pool():
@@ -299,31 +398,78 @@ def _get_pool():
 # Public seam — unchanged signatures.
 # ---------------------------------------------------------------------------
 
+def _sqlite_path(firm: str) -> Path:
+    if firm == DEMO_FIRM:
+        return Path(config.DB_PATH)
+    return Path(config.DB_PATH).parent / "firms" / f"{validate_slug(firm)}.db"
+
+
+def _schema_for(firm: str) -> str | None:
+    return None if firm == DEMO_FIRM else f"firm_{validate_slug(firm)}"
+
+
 def connect(path=None):
+    """Open a connection to the ACTIVE firm's store (see firm_scope). An explicit
+    path always means that SQLite file, regardless of firm."""
     # Precedence: an explicit path or VC_DB_PATH always means local SQLite —
     # so tests and local demo copies never accidentally reach the deployed DB.
+    firm = active_firm()
     url = os.environ.get("DATABASE_URL")
     if url and path is None and not os.environ.get("VC_DB_PATH"):
         pool = _get_pool()
-        return PgConnection(pool.getconn(), pool)
-    conn = sqlite3.connect(path or config.DB_PATH)
+        conn = PgConnection(pool.getconn(), pool, _schema_for(firm))
+        if conn._schema and conn._schema not in _pg_initialized:
+            init_db(conn)  # a firm store must exist before any router touches it
+        return conn
+    if path is None:
+        path = _sqlite_path(firm)
+        if firm != DEMO_FIRM:
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    if firm != DEMO_FIRM and str(path) not in _sqlite_initialized:
+        init_db(conn)
+        _sqlite_initialized.add(str(path))
     return conn
 
 
+def connect_default():
+    """The default (demo/control) store, whatever firm is active. Accounts live here."""
+    with firm_scope(None):
+        return connect()
+
+
 def init_db(conn) -> None:
-    global _pg_initialized
     if isinstance(conn, PgConnection):
-        if _pg_initialized:
-            return
+        key = conn._schema or "public"
+        with _pool_lock:
+            if key in _pg_initialized:
+                return
+        if conn._schema:
+            from psycopg import errors as _pe
+            from psycopg import sql as _sql
+            try:
+                conn._raw.execute(_sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(
+                    _sql.Identifier(conn._schema)))
+                conn._raw.commit()
+            except _pe.UniqueViolation:  # two first requests raced; the schema exists
+                conn._raw.rollback()
+            conn._armed = False
         conn.executescript(PG_SCHEMA)
         _migrate(conn)
         conn.commit()
-        _pg_initialized = True
+        with _pool_lock:
+            _pg_initialized.add(key)
         return
     conn.executescript(SCHEMA)
     _migrate(conn)
+    conn.commit()
+
+
+def init_control(conn) -> None:
+    """Account tables. Only ever called on the default store."""
+    conn.executescript(CONTROL_SCHEMA)
     conn.commit()
 
 

@@ -44,7 +44,7 @@ export default function Landing({ onEnter }: { onEnter: () => void }) {
   const [stats, setStats] = useState<{ signals: number; founders: number; dropped: number } | null>(null);
 
   useEffect(() => {
-    Promise.all([api.getQuality(), api.getSourcing("config/thesis_preseed_ai_infra.yaml")])
+    Promise.all([api.getQuality(), api.getSourcing("preseed_ai_infra")])
       .then(([q, s]) => setStats({
         signals: q.dedup_protected_signals,
         founders: s.founders.length,
