@@ -886,7 +886,6 @@ table.cmp .cmp-sep td { border-top: 2px solid var(--line); }
 .co-stage { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
 .co-stage .control { width: auto; }
 .co-hint { font-size: 11px; }
-.co-next { width: 240px; }
 .co-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
 .co-tab { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
   padding: 8px 12px; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer; }

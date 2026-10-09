@@ -94,8 +94,6 @@ export default function CompanyPage({ id, thesis, tab, setTab, openLedger, openM
             </select>
             {!co.stage_set_by_user && <span className="muted co-hint">derived from the pipeline</span>}
           </label>
-          <input className="filter co-next" placeholder="Next step…" defaultValue={co.next_step}
-            onBlur={(e) => { if (e.target.value !== co.next_step) setStage(co.stage, e.target.value); }} />
           {co.run_state === "running" ? (
             <span className="runline pulse">diligence running…</span>
           ) : (
