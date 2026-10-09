@@ -302,7 +302,6 @@ function ApplyForm({ openMemo }: { openMemo: (id: string) => void }) {
               className={s.status === "running" ? "runline pulse" : "muted"}
               style={{ fontSize: 12.5 }}>
               {STATUS_MARK[s.status] || "·"} {STAGE_LABEL[s.stage] || s.stage} — {s.status}
-              {s.seconds != null ? ` (${s.seconds.toFixed(1)}s)` : ""}
               {s.detail ? ` — ${s.detail}` : ""}
             </div>
           ))}

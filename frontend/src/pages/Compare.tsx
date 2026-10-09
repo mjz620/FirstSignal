@@ -5,7 +5,7 @@ import { AXES, AXLABEL, Err, InfoTip, Meters, Skeleton, Sparkline, stanceClass, 
 
 /* Page 6 — side-by-side comparison. Columns are founders; rows are the three
    independent axes (score + stance + trend — NEVER averaged or totaled),
-   the Signal/Coverage split, decision, and latency. */
+   the Signal/Coverage split, and decision. */
 const MAX = 3;
 
 export default function Compare({ thesis, openFounder }:
@@ -138,14 +138,6 @@ export default function Compare({ thesis, openFounder }:
                         </td>
                       );
                     })}
-                  </tr>
-                  <tr>
-                    <td className="rowh">Latency</td>
-                    {picked.map((f) => (
-                      <td key={f.id} className="axmini">
-                        {f.latency_total ? `${f.latency_total.toFixed(2)}s` : "—"}
-                      </td>
-                    ))}
                   </tr>
                 </tbody>
               </table>

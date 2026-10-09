@@ -194,18 +194,6 @@ export default function Decision({ thesis, founderId, founders, openFounder, ope
                 onClose={() => setTraceId(null)} />
             )}
           </div>
-
-          {/* Instrumentation lives in the footer — a speed-to-decision signal, not a
-              headline on a go/no-go surface. */}
-          {brief.latency.stages.length > 0 && (
-            <div className="lat-foot">
-              <span className="lat-foot-k">signal → decision</span>
-              {brief.latency.stages.map(([s, sec]) => (
-                <span key={s} className="lat-foot-stage">{s} {sec.toFixed(1)}s</span>
-              ))}
-              <b>{brief.latency.total_seconds.toFixed(1)}s total</b>
-            </div>
-          )}
         </>
       )}
     </div>

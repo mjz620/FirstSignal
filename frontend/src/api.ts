@@ -21,7 +21,6 @@ export interface FounderRow {
   score_history_points: number;
   score_history: ScorePoint[];
   has_memo: boolean;
-  latency_total: number;
 }
 export interface Claim {
   id: string;
@@ -54,7 +53,6 @@ export interface Brief {
   } | null;
   axes: Axis[];
   gaps: Gap[];
-  latency: { stages: [string, number][]; total_seconds: number };
   memo_md: string | null;
   claims: Claim[];
   score_history: ScorePoint[];
@@ -133,7 +131,6 @@ export interface RunStage {
   status: string; // queued | running | ok | error
   detail: string;
   updated_at: string;
-  seconds: number | null;
 }
 export interface RunStatus {
   founder_id: string;

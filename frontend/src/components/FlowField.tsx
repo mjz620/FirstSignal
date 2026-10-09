@@ -8,7 +8,10 @@ import { useEffect, useRef } from "react";
    of many strands under 'lighter' compositing is what makes the bundle glow.
    Brightness is weighted to the right so the left stays near-black and the
    headline keeps AA. Honors prefers-reduced-motion with one static frame.
-   DPR-aware, pauses when hidden, cleans up on unmount. */
+   DPR-aware, pauses when hidden, cleans up on unmount.
+   Node glow is a cached radial-gradient sprite, never ctx.shadowBlur: on a 2x
+   display shadowBlur alone made a frame ~67ms (15fps, main thread pegged);
+   the sprite brings the whole frame to ~3ms. */
 
 const BLUE = [
   [120, 170, 255],
@@ -35,6 +38,22 @@ export default function FlowField() {
     let parts: P[] = [];
     let raf = 0;
     let t = 0;
+
+    // One 24px glow sprite per palette colour, rendered once.
+    const GLOW = 12;
+    const sprites = BLUE.map(([r, g, b]) => {
+      const c = document.createElement("canvas");
+      c.width = c.height = GLOW * 2 * dpr;
+      const g2 = c.getContext("2d")!;
+      g2.scale(dpr, dpr);
+      const grad = g2.createRadialGradient(GLOW, GLOW, 0, GLOW, GLOW, GLOW);
+      grad.addColorStop(0, `rgba(${r},${g},${b},0.9)`);
+      grad.addColorStop(0.35, `rgba(${r},${g},${b},0.35)`);
+      grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      g2.fillStyle = grad;
+      g2.fillRect(0, 0, GLOW * 2, GLOW * 2);
+      return c;
+    });
 
     // Near-horizontal flow: cos(angle) stays > 0 so every strand drifts right;
     // the sine terms give the vertical rise/fall of long aurora ribbons.
@@ -103,13 +122,13 @@ export default function FlowField() {
       for (let i = 1; i < n; i++) ctx.lineTo(p.xs[i], p.ys[i]);
       ctx.stroke();
       if (p.node) {
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = `rgba(${r},${g},${b},${alpha})`;
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(sprites[BLUE.indexOf(p.c)], p.x - GLOW, p.y - GLOW, GLOW * 2, GLOW * 2);
+        ctx.globalAlpha = 1;
         ctx.fillStyle = `rgba(190,215,255,${alpha})`;
         ctx.beginPath();
         ctx.arc(p.x, p.y, 1 + p.w, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
       }
     };
 
