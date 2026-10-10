@@ -3,6 +3,7 @@ import * as api from "./api";
 import type { FounderRow, Me, Thesis } from "./api";
 import Login from "./pages/Login";
 import Discover from "./pages/Discover";
+import Pipeline from "./pages/Pipeline";
 import Sources from "./pages/Sources";
 import Screening from "./pages/Screening";
 import Diligence from "./pages/Diligence";
@@ -15,21 +16,23 @@ import Landing from "./pages/Landing";
 import CompanyPage from "./pages/Company";
 import type { CoTab } from "./pages/Company";
 
-/* Shell: left sidebar mirrors the brief's own pipeline — the nav teaches the
-   architecture. Sourcing → Screening → Diligence → Decision, plus the Thesis lens. */
+/* Shell: the sidebar is organised around the investor's work, not the pipeline's
+   stages. Discover (triage) → Pipeline (what's on my plate) → Compare, plus Sources.
+   Screening, Diligence and the memo are reached through a company's page. */
 
 const PAGES = [
   { key: "discover", n: "1", label: "Discover" },
-  { key: "screening", n: "2", label: "Screening" },
-  { key: "diligence", n: "3", label: "Diligence" },
-  { key: "decision", n: "4", label: "Memo & Decision" },
-  { key: "thesis", n: "5", label: "Thesis & Query" },
-  { key: "compare", n: "6", label: "Compare" },
-  { key: "network", n: "7", label: "Sourcing Network" },
-  { key: "methodology", n: "8", label: "Methodology" },
-  { key: "sources", n: "9", label: "Sources" },
+  { key: "pipeline", n: "2", label: "Pipeline" },
+  { key: "compare", n: "3", label: "Compare" },
+  { key: "sources", n: "4", label: "Sources" },
 ] as const;
-type PageKey = (typeof PAGES)[number]["key"] | "company";
+const MORE = [
+  { key: "thesis", label: "Theses & query" },
+  { key: "network", label: "Sourcing network" },
+  { key: "methodology", label: "How it works" },
+] as const;
+type PageKey = (typeof PAGES)[number]["key"] | (typeof MORE)[number]["key"]
+  | "company" | "screening" | "diligence" | "decision";
 
 function useTheme(): [string, () => void] {
   const [t, setT] = useState(
@@ -115,6 +118,12 @@ export default function App() {
           </button>
         ))}
         <div className="side-foot">
+          <div className="side-more">
+            {MORE.map((p) => (
+              <button key={p.key} className={`side-link ${page === p.key ? "on" : ""}`}
+                onClick={() => setPage(p.key)}>{p.label}</button>
+            ))}
+          </div>
           <label className="side-label" htmlFor="thesis-lens">Thesis</label>
           <select id="thesis-lens" className="control" value={thesis}
             onChange={(e) => setThesis(e.target.value)} title="fund thesis lens">
@@ -148,6 +157,7 @@ export default function App() {
             openLedger={openDiligence} openMemo={openDecision} />
         )}
         {page === "discover" && <Discover thesis={thesis} openCompany={openCompany} />}
+        {page === "pipeline" && <Pipeline thesis={thesis} openCompany={openCompany} />}
         {page === "sources" && <Sources thesis={thesis} />}
         {page === "screening" && <Screening thesis={thesis} openFounder={openCompany} />}
         {page === "diligence" && (

@@ -90,13 +90,15 @@ def _stage_sets(conn, thesis_name: str) -> dict[str, set]:
     }
 
 
-def stage_for(fid: str, sets: dict) -> tuple[str, bool]:
+def stage_for(fid: str, sets: dict) -> tuple[str, bool, str]:
+    """(stage, set_by_user, next_step)."""
     if fid in sets["user"]:
-        return sets["user"][fid][0], True
+        st, nxt = sets["user"][fid]
+        return st, True, nxt or ""
     for st in ("decision", "passed", "running", "researching"):
         if fid in sets[st]:
-            return ("diligence" if st == "running" else st), False
-    return "new", False
+            return ("diligence" if st == "running" else st), False, ""
+    return "new", False, ""
 
 
 def feed(conn, thesis) -> list[dict]:
@@ -121,7 +123,7 @@ def feed(conn, thesis) -> list[dict]:
         origin = next(s for s in reversed(sigs) if s["source"] == origin_src)
         blob = "\n".join(s["content"] for s in sigs).lower()
         fit = [tp for tp in thesis.topics if tp.lower() in blob]
-        stage, by_user = stage_for(fid, sets)
+        stage, by_user, next_step = stage_for(fid, sets)
         researched = fid in sets["researching"] or fid in sets["decision"]
         name = e["name"] or fid
         company = name.split("/", 1)[1].strip() if "/" in name else name
@@ -136,7 +138,7 @@ def feed(conn, thesis) -> list[dict]:
             "fit": fit, "first_seen": origin["observed_at"], "latest": sigs[0]["observed_at"],
             "signal_count": len(sigs),
             "sources": sorted({s["source"] for s in sigs}),
-            "stage": stage, "stage_set_by_user": by_user,
+            "stage": stage, "stage_set_by_user": by_user, "next_step": next_step,
             "researched": researched,
             "score": cur["score"] if researched else None,
             "coverage": cur["coverage"] if researched else None,

@@ -324,7 +324,7 @@ export interface DiscoverItem {
   one_liner: string; why: string; origin: string; origin_url: string | null;
   fit: string[]; first_seen: string | null; latest: string | null;
   signal_count: number; sources: string[];
-  stage: string; stage_set_by_user: boolean; researched: boolean;
+  stage: string; stage_set_by_user: boolean; next_step: string; researched: boolean;
   score: number | null; coverage: number | null; decision: string | null;
 }
 export const getDiscover = (thesis: string) =>
