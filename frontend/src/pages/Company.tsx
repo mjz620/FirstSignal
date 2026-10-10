@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as api from "../api";
 import type { Company as Co } from "../api";
-import { ClaimRow, Err, Memo, Meters, Skeleton, TracePanel } from "../components";
+import { ClaimRow, Err, Memo, Meters, Skeleton, StanceWord, TracePanel } from "../components";
 
 /* The Company page — the centre of the app. Every company name links here. One
    aggregate call; the LLM summary loads separately so the page never waits on a model.
@@ -224,7 +224,8 @@ function Overview({ co, summary, draft, research, busy }: {
             ? <p className="muted">Not yet screened.</p>
             : co.axes.map((a) => (
               <p key={a.axis} className="co-axis">
-                <b>{a.axis}</b> {a.score != null ? `${a.score}/10` : "—"} <span className="muted">{a.stance ?? ""}</span>
+                <b>{a.axis}</b> {a.score != null ? `${a.score}/10` : "—"} <StanceWord s={a.stance} />
+                {a.rationale && <span className="muted co-axis-why"> — {a.rationale}</span>}
               </p>
             ))}
         </section>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as api from "../api";
 import type { FounderRow } from "../api";
-import { AXES, AXLABEL, Err, FounderPeek, InfoTip, Meters, Skeleton, Sparkline, stanceClass, TrendGlyph } from "../components";
+import { AXES, AXLABEL, Err, FounderPeek, InfoTip, Meters, Skeleton, Sparkline, StanceWord, stanceClass, TrendGlyph } from "../components";
 
 /* Page 2 — "Three independent verdicts, never averaged." */
 export default function Screening({ thesis, openFounder }:
@@ -28,9 +28,9 @@ export default function Screening({ thesis, openFounder }:
       <div className="page-h">
         <h1>Screening</h1>
         <p className="page-sub">
-          Every opportunity scored on <b>three independent axes — never averaged</b>.
-          The Founder Score chip is a persistent, cross-application <em>input</em> to
-          the Founder axis, not a substitute for it. Trends come from append-only score history.
+          Every company scored on <b>three independent axes — never averaged</b>: the
+          verdict and the reason come first, the numbers underneath. A score on a thin
+          record is marked <em>low evidence</em> rather than read as weak.
         </p>
       </div>
       {err && <Err msg={err} />}
@@ -48,7 +48,7 @@ export default function Screening({ thesis, openFounder }:
 
       {founders && (
         <>
-          <div className="section-h"><h2>Screened funnel — this thesis lens</h2>
+          <div className="section-h"><h2>Screened under this thesis</h2>
             <span className="count">{rest.length}</span></div>
           <input className="filter" placeholder="filter by name / source…"
             value={filter} onChange={(e) => setFilter(e.target.value)} />
@@ -60,7 +60,7 @@ export default function Screening({ thesis, openFounder }:
           <div className="tablewrap">
           <table className="funnel">
             <thead>
-              <tr><th>Founder</th><th>Source</th><th>Signal / Coverage</th>
+              <tr><th>Company</th><th>Source</th><th>Score · evidence</th>
                 <th>Founder <InfoTip kind="axis" axis="founder" /></th>
                 <th>Market <InfoTip kind="axis" axis="market" /></th>
                 <th>Idea vs Mkt <InfoTip kind="axis" axis="idea" /></th>
@@ -90,7 +90,7 @@ export default function Screening({ thesis, openFounder }:
                         return (
                           <td key={k} className={`axmini ${stanceClass(a?.stance)}`}>
                             {a && a.score != null
-                              ? <>{a.score} <TrendGlyph trend={a.trend} /><em>{a.stance}</em></> : "—"}
+                              ? <>{a.score} <TrendGlyph trend={a.trend} /><StanceWord s={a.stance} /></> : "—"}
                           </td>
                         );
                       })}
@@ -110,8 +110,8 @@ export default function Screening({ thesis, openFounder }:
 
       {killed.length > 0 && (
         <div className="killed">
-          <div className="section-h"><h2>First-pass kill screen — this thesis lens</h2>
-            <span className="count">{killed.length} removed before diligence under this lens — reason logged; "→ Diligence" above overrides it</span></div>
+          <div className="section-h"><h2>Removed at first pass under this thesis</h2>
+            <span className="count">{killed.length} · the reason is logged; "→ Diligence" above overrides it</span></div>
           {killed.map((k) => (
             <div key={k.id} className="kill"><b>{k.id.replace("founder-", "")}</b> — {k.reason}</div>
           ))}
@@ -179,13 +179,18 @@ function FounderCard({ f, onOpen }: { f: FounderRow; onOpen: () => void }) {
     <div className="card">
       <div className="top">
         <button className="rowlink name" onClick={onOpen}>{f.name}</button>
-        <span className="pill">{f.source === "deck" ? "inbound" : f.source}</span>
-        {f.score_history?.length > 0 && (
+        <span className="pill">{f.source === "deck" ? "applied" : f.source}</span>
+        {f.decision && <span className={`badge ${f.decision}`}>{f.decision}</span>}
+        {f.score_history?.length > 1 && (
           <span className="sc" title="Founder Score history — hover a point for its trigger">
             <Sparkline history={f.score_history} />
           </span>
         )}
       </div>
+      {/* The takeaway first: a verdict and one stored reason in words. */}
+      <p className="card-reason">
+        {f.reason ?? <span className="muted">No rationale on record yet.</span>}
+      </p>
       <div className="axrow">
         {AXES.map((k) => {
           const a = ax[k];
@@ -194,7 +199,7 @@ function FounderCard({ f, onOpen }: { f: FounderRow; onOpen: () => void }) {
               <div className="k">{AXLABEL[k]} <InfoTip kind="axis" axis={k} /></div>
               <div className="v">
                 {a && a.score != null
-                  ? <>{a.score}<small><TrendGlyph trend={a.trend} /> {a.stance}</small></> : "—"}
+                  ? <>{a.score}<small><TrendGlyph trend={a.trend} /> <StanceWord s={a.stance} /></small></> : "—"}
               </div>
             </div>
           );

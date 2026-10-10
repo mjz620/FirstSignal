@@ -96,6 +96,14 @@ def _thesis(conn, slug: str | None):
     return t
 
 
+def _first_sentence(text: str | None, limit: int = 180) -> str | None:
+    if not text:
+        return None
+    import re as _re
+    first = _re.split(r"(?<=[.!?])\s", text.strip(), maxsplit=1)[0]
+    return first if len(first) <= limit else first[:limit - 1].rstrip() + "…"
+
+
 def _source_of(conn, founder_id: str) -> str:
     row = conn.execute(
         "SELECT s.source FROM signals s LEFT JOIN resolutions r ON r.signal_id=s.id "
@@ -311,6 +319,9 @@ def founders(thesis: str | None = None):
                      f"SELECT id, founder_score FROM founders WHERE id IN ({marks})", ids)}
     memos = {r["fid"] for r in conn.execute(
         f"SELECT DISTINCT founder_id fid FROM memos WHERE founder_id IN ({marks})", ids)}
+    decisions = {r["fid"]: r["decision"] for r in conn.execute(
+        f"SELECT founder_id fid, decision FROM memos WHERE thesis=? AND founder_id IN ({marks})",
+        [t.name, *ids])}
     lat_tot = {r["fid"]: r["tot"] for r in conn.execute(
         f"SELECT founder_id fid, SUM(seconds) tot FROM latency "
         f"WHERE founder_id IN ({marks}) GROUP BY founder_id", ids)}
@@ -333,7 +344,12 @@ def founders(thesis: str | None = None):
                     "source": src.get(fid, "unknown"), "axes": axes_by[fid],
                     "signal": cur["score"], "coverage": cur["coverage"],
                     "score_history_points": len(hist), "score_history": hist,
-                    "has_memo": fid in memos, "latency_total": lat_tot.get(fid) or 0})
+                    "has_memo": fid in memos, "latency_total": lat_tot.get(fid) or 0,
+                    # verdict + one stored reason in words (the founder-axis rationale's
+                    # first sentence) — read, never generated at display time
+                    "decision": decisions.get(fid),
+                    "reason": _first_sentence(next(
+                        (a.get("rationale") for a in axes_by[fid] if a["axis"] == "founder"), None))})
     # rank by Founder Score desc (unblended axes stay separate in the payload)
     out.sort(key=lambda f: f["signal"] or 0, reverse=True)
     return out

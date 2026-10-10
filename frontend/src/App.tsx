@@ -115,7 +115,7 @@ export default function App() {
           </button>
         ))}
         <div className="side-foot">
-          <label className="side-label" htmlFor="thesis-lens">Thesis lens — every page runs through it</label>
+          <label className="side-label" htmlFor="thesis-lens">Thesis</label>
           <select id="thesis-lens" className="control" value={thesis}
             onChange={(e) => setThesis(e.target.value)} title="fund thesis lens">
             {theses.map((t) => <option key={t.slug} value={t.slug}>{t.name}</option>)}

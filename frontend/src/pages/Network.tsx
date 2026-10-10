@@ -79,7 +79,7 @@ export default function NetworkPage() {
                               )}
                               <div className="net-notable">
                                 {c.outcomes.screen_killed} killed at screen ·
-                                {" "}median Signal {c.outcomes.median_signal ?? "—"}
+                                {" "}median Score {c.outcomes.median_signal ?? "—"}
                               </div>
                             </span>
                           ) : <span className="net-gap">—</span>}
@@ -130,7 +130,7 @@ function GraphPanel({ n }: { n: Network }) {
         <span className="net-cap">
           {hovered ? <b>{hovered}</b> : (
             <>drag a node to throw it · hover to trace connections · node size = influence
-              {" "}· <b>glow = median Signal of the founders that channel produced</b>
+              {" "}· <b>glow = median Score of the founders that channel produced</b>
               {" "}(unlit = not measured, not weak)
               ({n.counts.startups} outcomes · {n.counts.channels} channels ·
               {" "}{n.counts.investors} investors ·

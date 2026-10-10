@@ -232,7 +232,7 @@ function QueryBox({ openFounder }: { openFounder: (id: string) => void }) {
           {res.results.length > 0 && (
             <div className="tablewrap" style={{ marginTop: 8 }}>
             <table className="funnel">
-              <thead><tr><th>Founder</th><th>Matched</th><th>Signal / Cov</th></tr></thead>
+              <thead><tr><th>Company</th><th>Matched</th><th>Score · evidence</th></tr></thead>
               <tbody>
                 {res.results.map((r) => (
                   <tr key={r.id}>

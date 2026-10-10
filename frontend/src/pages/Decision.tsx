@@ -3,7 +3,7 @@ import * as api from "../api";
 import type { AskResult, Axis, Brief } from "../api";
 import {
   AXES, AXLABEL, ClaimRow, ContradictionSpotlight, Err, FounderSwitcher, inline, InfoTip, Memo,
-  Meters, ProvenanceGraph, Skeleton, Sparkline, stanceClass, TracePanel, TrendGlyph,
+  Meters, ProvenanceGraph, Skeleton, Sparkline, StanceWord, stanceClass, TracePanel, TrendGlyph,
 } from "../components";
 
 /* Page 4 — "A decision you could act on in 24h, every sentence traceable." */
@@ -129,7 +129,7 @@ export default function Decision({ thesis, founderId, founders, openFounder, ope
                       <span className="lbl">{AXLABEL[k]}</span>
                       <span className="bar"><span className={stanceClass(a?.stance)} style={{ width: `${sc * 10}%` }} /></span>
                       <span className="num">
-                        {a && a.score != null ? <>{a.score} <TrendGlyph trend={a.trend} /> <em>{a.stance}</em></> : "—"}
+                        {a && a.score != null ? <>{a.score} <TrendGlyph trend={a.trend} /> <StanceWord s={a.stance} /></> : "—"}
                       </span>
                     </>
                   );

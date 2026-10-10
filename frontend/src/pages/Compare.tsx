@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as api from "../api";
 import type { Brief, FounderRow } from "../api";
-import { AXES, AXLABEL, Err, InfoTip, Meters, Skeleton, Sparkline, stanceClass, TrendGlyph } from "../components";
+import { AXES, AXLABEL, Err, InfoTip, Meters, Skeleton, Sparkline, stanceClass, StanceWord, TrendGlyph } from "../components";
 
 /* Page 6 — side-by-side comparison. Columns are founders; rows are the three
    independent axes (score + stance + trend — NEVER averaged or totaled),
@@ -99,7 +99,7 @@ export default function Compare({ thesis, openFounder }:
                                   {a.score} <TrendGlyph trend={a.trend} />
                                 </span>
                                 <span className={`axmini ${stanceClass(a.stance)}`}>
-                                  <em>{a.stance}</em>
+                                  <StanceWord s={a.stance} />
                                 </span>
                               </>
                             ) : <span className="cmp-note">not screened under this thesis</span>}
@@ -109,7 +109,7 @@ export default function Compare({ thesis, openFounder }:
                     </tr>
                   ))}
                   <tr className="cmp-sep">
-                    <td className="rowh">Signal / Coverage</td>
+                    <td className="rowh">Score · evidence</td>
                     {picked.map((f) => (
                       <td key={f.id}><Meters signal={f.signal} coverage={f.coverage} founderId={f.id} /></td>
                     ))}

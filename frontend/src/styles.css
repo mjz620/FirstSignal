@@ -934,3 +934,15 @@ table.cmp .cmp-sep td { border-top: 2px solid var(--line); }
 .disc-seen { font-size: 11.5px; }
 .disc-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 @media (max-width: 760px) { .disc-row { grid-template-columns: 1fr; } .disc-side { align-items: flex-start; text-align: left; } }
+
+/* --- score visual + plain-words stances ------------------------------------ */
+.meter .m-bar { position: relative; }
+.meter .m-ev { position: absolute; left: 0; top: 0; height: 100%; background: transparent;
+  border-bottom: 1px dotted var(--faint); }
+.meters.low .m-bar > span:first-child { background: var(--faint); }
+.meters.low .m-v { color: var(--muted); }
+.lowev { margin-left: 6px; font-size: 9.5px; letter-spacing: 0.08em; color: var(--mid);
+  border: 1px solid currentColor; border-radius: 3px; padding: 0 4px; }
+.card-reason { margin: 0 0 12px; font-family: var(--serif); font-size: 14.5px; line-height: 1.4; }
+.stance { font-style: normal; }
+.co-axis-why { font-size: 12.5px; text-transform: none; }

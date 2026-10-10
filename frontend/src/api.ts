@@ -4,6 +4,7 @@ export interface Axis {
   stance?: string;
   coverage?: number;
   trend?: string;
+  rationale?: string | null;
   status?: string;
 }
 export interface ScorePoint {
@@ -21,6 +22,8 @@ export interface FounderRow {
   score_history_points: number;
   score_history: ScorePoint[];
   has_memo: boolean;
+  decision: string | null;
+  reason: string | null;
 }
 export interface Claim {
   id: string;

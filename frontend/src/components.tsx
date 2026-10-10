@@ -9,8 +9,26 @@ export const TREND: Record<string, string> = { improving: "↑", declining: "↓
    reads like a rating. */
 export function TrendGlyph({ trend }: { trend?: string }) {
   const t = trend || "new";
-  if (!TREND[t]) return <span className="trend-new" title="first score — no trend yet">new</span>;
+  if (!TREND[t]) return null;  // one score on record: no trend to show, no label either
   return <span aria-label={t} title={t}>{TREND[t]}</span>;
+}
+/* Plain words for the rubric's stance enum. The stored value stays verbatim; this is
+   display only, with the one-sentence meaning in a tooltip. */
+const STANCE_WORD: Record<string, [string, string]> = {
+  strong: ["strong", "founder evidence supports a strong team"],
+  mixed: ["mixed", "founder evidence cuts both ways"],
+  weak: ["weak", "founder evidence is thin or negative"],
+  bullish: ["tailwind", "market evidence favours this category"],
+  neutral: ["neutral", "market evidence is inconclusive"],
+  bear: ["headwind", "market evidence works against this category"],
+  survives: ["holds up", "the idea holds up against the market as evidenced"],
+  "pivot-bet": ["needs a pivot", "the idea only works if the company pivots from what the evidence shows"],
+};
+export function stanceWord(s?: string): string { return s ? (STANCE_WORD[s]?.[0] ?? s) : ""; }
+export function StanceWord({ s }: { s?: string }) {
+  if (!s) return null;
+  const [w, tip] = STANCE_WORD[s] ?? [s, s];
+  return <em className="stance" title={tip}>{w}</em>;
 }
 export const AXES = ["founder", "market", "idea"] as const;
 export const AXLABEL: Record<string, string> = { founder: "Founder", market: "Market", idea: "Idea vs Mkt" };
@@ -67,6 +85,7 @@ export function DomainChip({ url }: { url?: string | null }) {
 /* One point renders a flat tick — never a fake trend. Tooltip = trigger + date. */
 export function Sparkline({ history, width = 96, height = 26 }:
   { history: ScorePoint[]; width?: number; height?: number }) {
+  if (history.length < 2) return null;  // a single dot is not a trend
   if (!history?.length) return null;
   const pad = 4;
   const tip = (p: ScorePoint) => `${p.trigger} · ${p.timestamp.slice(0, 10)} · score ${p.score}`;
@@ -375,20 +394,27 @@ function PeekBody({ d }: { d: FounderSummary }) {
   );
 }
 
+/* One visual for the Founder Score and the evidence behind it. Below 30% evidence
+   depth the score is greyed and tagged: 8.4 on a thin record is uncertain, not strong,
+   and the reader should not have to work that out from two separate numbers. */
+export const LOW_EVIDENCE = 0.3;
 export function Meters({ signal, coverage, founderId }: {
   signal: number | null; coverage: number; founderId?: string;
 }) {
+  const pct = Math.round(coverage * 100);
+  const low = coverage < LOW_EVIDENCE;
   return (
-    <div className="meters">
-      <div className="meter" title="Signal: verified-evidence Founder Score (0–10)">
-        <span className="m-k">Signal <InfoTip kind="signal" founderId={founderId} /></span>
-        <span className="m-bar"><span style={{ width: `${((signal ?? 0) / 10) * 100}%` }} /></span>
-        <span className="m-v">{signal ?? "—"}<em>/10</em></span>
-      </div>
-      <div className="meter cov" title="Coverage: how complete the record is (0–100%)">
-        <span className="m-k">Coverage <InfoTip kind="coverage" founderId={founderId} /></span>
-        <span className="m-bar"><span style={{ width: `${Math.round(coverage * 100)}%` }} /></span>
-        <span className="m-v">{Math.round(coverage * 100)}<em>%</em></span>
+    <div className={`meters ${low ? "low" : ""}`}>
+      <div className="meter" title={`Score ${signal ?? "—"}/10 from verified evidence · evidence depth ${pct}%`}>
+        <span className="m-k">Score <InfoTip kind="signal" founderId={founderId} />
+          {low && <span className="lowev" title={`only ${pct}% of the record is covered by evidence`}>low evidence</span>}
+        </span>
+        <span className="m-bar">
+          <span style={{ width: `${((signal ?? 0) / 10) * 100}%` }} />
+          <span className="m-ev" style={{ width: `${pct}%` }} title={`evidence depth ${pct}%`} />
+        </span>
+        <span className="m-v">{signal ?? "—"}<em>/10 · evidence {pct}%</em>
+          <InfoTip kind="coverage" founderId={founderId} /></span>
       </div>
     </div>
   );

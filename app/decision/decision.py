@@ -59,17 +59,18 @@ def per_axis(conn, founder_id: str, thesis_name: str | None = None) -> list[dict
     for axis in axes_mod.AXES:
         if thesis_name:
             row = conn.execute(
-                "SELECT score, stance, coverage FROM axis_scores WHERE founder_id=? "
+                "SELECT score, stance, coverage, rationale FROM axis_scores WHERE founder_id=? "
                 "AND axis=? AND thesis=? ORDER BY scored_at DESC LIMIT 1",
                 (founder_id, axis, thesis_name)).fetchone()
         else:
             row = conn.execute(
-                "SELECT score, stance, coverage FROM axis_scores WHERE founder_id=? "
+                "SELECT score, stance, coverage, rationale FROM axis_scores WHERE founder_id=? "
                 "AND axis=? ORDER BY scored_at DESC LIMIT 1",
                 (founder_id, axis)).fetchone()
         if row:
             out.append({"axis": axis, "score": row["score"],
                         "stance": norm_stance(row["stance"]), "coverage": row["coverage"],
+                        "rationale": row["rationale"],
                         "trend": axes_mod.trend(conn, founder_id, axis)})
         else:
             out.append({"axis": axis, "status": "not yet screened"})
@@ -87,7 +88,7 @@ def per_axis_batch(conn, founder_ids: list[str],
     marks = ",".join("?" * len(ids))
     # All axis rows for these founders, newest first — pick latest/prior in Python.
     rows = conn.execute(
-        f"SELECT founder_id, axis, score, stance, coverage, thesis, scored_at "
+        f"SELECT founder_id, axis, score, stance, coverage, rationale, thesis, scored_at "
         f"FROM axis_scores WHERE founder_id IN ({marks}) "
         f"ORDER BY scored_at DESC", ids).fetchall()
     grouped: dict[tuple, list] = {}
@@ -113,6 +114,7 @@ def per_axis_batch(conn, founder_ids: list[str],
             axes_out.append({"axis": axis, "score": latest["score"],
                              "stance": norm_stance(latest["stance"]),
                              "coverage": latest["coverage"],
+                             "rationale": latest["rationale"],
                              "trend": tr})
         out[fid] = axes_out
     return out
