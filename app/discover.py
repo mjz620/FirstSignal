@@ -144,5 +144,8 @@ def feed(conn, thesis) -> list[dict]:
             "coverage": cur["coverage"] if researched else None,
             "decision": memo_decisions.get(fid),
         })
-    out.sort(key=lambda x: (x["latest"] or "", len(x["fit"])), reverse=True)
+    # Thesis first: what fits this lens (or was researched under it) ranks above what
+    # merely arrived recently — swapping the lens must change the list, not just a label.
+    out.sort(key=lambda x: (len(x["fit"]) > 0 or x["researched"], len(x["fit"]),
+                            x["latest"] or ""), reverse=True)
     return out

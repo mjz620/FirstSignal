@@ -20,6 +20,7 @@ export default function Discover({ thesis, openCompany }:
   const [err, setErr] = useState<string | null>(null);
   const [hidePassed, setHidePassed] = useState(true);
   const [onlyNew, setOnlyNew] = useState(false);
+  const [allCompanies, setAllCompanies] = useState(false);
   const [adding, setAdding] = useState(false);
   const [cursor, setCursor] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
@@ -30,7 +31,8 @@ export default function Discover({ thesis, openCompany }:
   useEffect(() => { setItems(null); load(); }, [load]);
 
   const visible = (items ?? []).filter((i) =>
-    (!hidePassed || i.stage !== "passed") && (!onlyNew || i.stage === "new"));
+    (allCompanies || api.inThesis(i)) && (!hidePassed || i.stage !== "passed") && (!onlyNew || i.stage === "new"));
+  const outside = (items ?? []).filter((i) => !api.inThesis(i)).length;
 
   const setStage = async (it: DiscoverItem, stage: string) => {
     setBusy(it.id);
@@ -82,6 +84,11 @@ export default function Discover({ thesis, openCompany }:
           onChange={(e) => setHidePassed(e.target.checked)} /> hide passed</label>
         <label className="disc-toggle"><input type="checkbox" checked={onlyNew}
           onChange={(e) => setOnlyNew(e.target.checked)} /> only new</label>
+        {outside > 0 && (
+          <label className="disc-toggle" title="companies whose signals match none of this thesis's topics">
+            <input type="checkbox" checked={allCompanies}
+              onChange={(e) => setAllCompanies(e.target.checked)} /> show {outside} outside this thesis</label>
+        )}
         <span className="count">{items ? `${visible.length} of ${items.length}` : ""}</span>
         <span className="disc-keys muted">j / k move · t track · p pass · r research · ↵ open</span>
         <button className="minibtn primary" onClick={() => setAdding((v) => !v)}>
@@ -97,7 +104,7 @@ export default function Discover({ thesis, openCompany }:
       {err && <Err msg={err} />}
       {!items && !err && <Skeleton lines={8} />}
       {items && visible.length === 0 && (
-        <p className="empty">Nothing to triage under this thesis — scan a source on the Sources page or add a company.</p>
+        <p className="empty">Nothing matches this thesis yet — scan a source on the Sources page, add a company, or show the companies outside it.</p>
       )}
       <div className="disc-list">
         {visible.map((it, i) => (

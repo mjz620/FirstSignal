@@ -327,6 +327,10 @@ export interface DiscoverItem {
   stage: string; stage_set_by_user: boolean; next_step: string; researched: boolean;
   score: number | null; coverage: number | null; decision: string | null;
 }
+/* A company belongs to a thesis if a signal matches one of its topics, it was
+   researched under it, or you placed it yourself. Everything else is background. */
+export const inThesis = (it: DiscoverItem) =>
+  it.fit.length > 0 || it.researched || !!it.decision || it.stage_set_by_user;
 export const getDiscover = (thesis: string) =>
   j<{ thesis: string; items: DiscoverItem[] }>(`/api/discover?thesis=${encodeURIComponent(thesis)}`);
 export const getChannels = () =>

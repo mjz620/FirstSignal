@@ -34,7 +34,7 @@ export default function Pipeline({ thesis, openCompany }:
     setBusy(null);
   };
 
-  const byStage = (st: string) => (items ?? []).filter((i) => i.stage === st)
+  const byStage = (st: string) => (items ?? []).filter((i) => i.stage === st && api.inThesis(i))
     .sort((a, b) => (b.latest ?? "").localeCompare(a.latest ?? ""));
 
   return (
@@ -42,8 +42,8 @@ export default function Pipeline({ thesis, openCompany }:
       <div className="page-h">
         <h1>Pipeline</h1>
         <p className="page-sub">
-          Every company by stage under this thesis. Move a company with its stage menu;
-          write the next step on the card so tomorrow-you knows what to do.
+          Companies that belong to this thesis, by stage. Move a company with its stage
+          menu; write the next step on the card so tomorrow-you knows what to do.
         </p>
       </div>
       {err && <Err msg={err} />}
