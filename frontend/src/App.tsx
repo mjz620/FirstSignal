@@ -27,6 +27,7 @@ const PAGES = [
   { key: "sources", n: "4", label: "Sources" },
 ] as const;
 const MORE = [
+  { key: "screening", label: "Screening table" },
   { key: "thesis", label: "Theses & query" },
   { key: "network", label: "Sourcing network" },
   { key: "methodology", label: "How it works" },
