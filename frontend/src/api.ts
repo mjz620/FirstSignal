@@ -316,6 +316,16 @@ export const getSourcing = (thesis: string) =>
   j<SourcingFeed>(`/api/sourcing?thesis=${encodeURIComponent(thesis)}`);
 export const getQuality = () => j<Quality>("/api/quality");
 export const getNetwork = () => j<Network>("/api/network");
+export interface DiscoverItem {
+  id: string; company: string; person: string | null;
+  one_liner: string; why: string; origin: string; origin_url: string | null;
+  fit: string[]; first_seen: string | null; latest: string | null;
+  signal_count: number; sources: string[];
+  stage: string; stage_set_by_user: boolean; researched: boolean;
+  score: number | null; coverage: number | null; decision: string | null;
+}
+export const getDiscover = (thesis: string) =>
+  j<{ thesis: string; items: DiscoverItem[] }>(`/api/discover?thesis=${encodeURIComponent(thesis)}`);
 export const getChannels = () =>
   j<{ channels: Channel[]; suggestion: string | null }>("/api/channels");
 export const getTrace = (fid: string, cid: string) =>

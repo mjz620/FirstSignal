@@ -910,3 +910,27 @@ table.cmp .cmp-sep td { border-top: 2px solid var(--line); }
 .tl-date { color: var(--muted); font-variant-numeric: tabular-nums; }
 .tl-text { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 700px) { .tl-item { grid-template-columns: 1fr; gap: 4px; } }
+
+/* --- Discover feed ---------------------------------------------------------- */
+.disc-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; font-size: 12.5px; }
+.disc-toggle { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); cursor: pointer; }
+.disc-keys { font-size: 11.5px; margin-left: auto; }
+.disc-add { margin-bottom: 16px; }
+.disc-list { display: flex; flex-direction: column; }
+.disc-row { display: grid; grid-template-columns: 1fr 220px; gap: 18px; padding: 14px 10px; margin: 0 -10px;
+  border-top: 1px solid var(--line); border-left: 2px solid transparent; }
+.disc-row.cur { background: var(--panel); border-left-color: var(--accent); }
+.disc-row.passed { opacity: 0.55; }
+.disc-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.disc-name { font-family: var(--serif); font-size: 18px; font-weight: 500; }
+.disc-stage { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+.disc-one { margin: 4px 0 6px; font-size: 14px; }
+.disc-why { margin: 0; font-size: 12.5px; color: var(--muted); }
+.disc-why b { color: var(--fg); font-weight: 500; }
+.disc-why a { color: var(--fg); }
+.disc-sep { margin: 0 8px; }
+.disc-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; }
+.disc-score { font-size: 13px; } .disc-score b { font-size: 18px; font-family: var(--serif); }
+.disc-seen { font-size: 11.5px; }
+.disc-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 760px) { .disc-row { grid-template-columns: 1fr; } .disc-side { align-items: flex-start; text-align: left; } }

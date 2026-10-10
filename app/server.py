@@ -448,6 +448,17 @@ def sourcing(thesis: str | None = None):
             "scan_sources": [n for n, _ in scanner.ADAPTERS]}
 
 
+@app.get("/api/discover")
+def discover(thesis: str | None = None):
+    """Triage feed: every company with at least one signal, inbound and outbound
+    together, each with a plain-words reason it surfaced. Scanner health lives on
+    /api/channels, not here."""
+    from . import discover as disc
+    conn = _conn()
+    t = _thesis(conn, thesis)
+    return {"thesis": t.name, "items": disc.feed(conn, t)}
+
+
 @app.get("/api/channels")
 def channels():
     """Sourcing-graph lite (stretch 3): per-channel yield through the funnel —

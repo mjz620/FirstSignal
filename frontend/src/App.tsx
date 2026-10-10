@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import * as api from "./api";
 import type { FounderRow, Me, Thesis } from "./api";
 import Login from "./pages/Login";
-import Sourcing from "./pages/Sourcing";
+import Discover from "./pages/Discover";
+import Sources from "./pages/Sources";
 import Screening from "./pages/Screening";
 import Diligence from "./pages/Diligence";
 import Decision from "./pages/Decision";
@@ -18,7 +19,7 @@ import type { CoTab } from "./pages/Company";
    architecture. Sourcing → Screening → Diligence → Decision, plus the Thesis lens. */
 
 const PAGES = [
-  { key: "sourcing", n: "1", label: "Sourcing" },
+  { key: "discover", n: "1", label: "Discover" },
   { key: "screening", n: "2", label: "Screening" },
   { key: "diligence", n: "3", label: "Diligence" },
   { key: "decision", n: "4", label: "Memo & Decision" },
@@ -26,6 +27,7 @@ const PAGES = [
   { key: "compare", n: "6", label: "Compare" },
   { key: "network", n: "7", label: "Sourcing Network" },
   { key: "methodology", n: "8", label: "Methodology" },
+  { key: "sources", n: "9", label: "Sources" },
 ] as const;
 type PageKey = (typeof PAGES)[number]["key"] | "company";
 
@@ -44,7 +46,7 @@ function useTheme(): [string, () => void] {
 export default function App() {
   const [theme, toggle] = useTheme();
   const [entered, setEntered] = useState(() => sessionStorage.getItem("entered") === "1");
-  const [page, setPage] = useState<PageKey>("sourcing");
+  const [page, setPage] = useState<PageKey>("discover");
   const [theses, setTheses] = useState<Thesis[]>([]);
   const [thesis, setThesis] = useState("preseed_ai_infra");
   const [founderId, setFounderId] = useState<string | null>(null);
@@ -85,7 +87,6 @@ export default function App() {
     if (!id) return;
     setFounderId(id); setCoTab(tab); setPage("company");
   };
-  const openCompanyMemo = (id: string) => openCompany(id, "memo");
 
   if (!entered) {
     return <Landing onEnter={() => { sessionStorage.setItem("entered", "1"); setEntered(true); }} />;
@@ -146,9 +147,8 @@ export default function App() {
           <CompanyPage id={founderId} thesis={thesis} tab={coTab} setTab={setCoTab}
             openLedger={openDiligence} openMemo={openDecision} />
         )}
-        {page === "sourcing" && (
-          <Sourcing thesis={thesis} openFounder={openCompany} openMemo={openCompanyMemo} />
-        )}
+        {page === "discover" && <Discover thesis={thesis} openCompany={openCompany} />}
+        {page === "sources" && <Sources thesis={thesis} />}
         {page === "screening" && <Screening thesis={thesis} openFounder={openCompany} />}
         {page === "diligence" && (
           <Diligence thesis={thesis} founderId={founderId}
