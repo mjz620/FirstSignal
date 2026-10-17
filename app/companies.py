@@ -32,10 +32,11 @@ _FACT_ORDER = list(_FACT_LABEL)
 
 def _signals(conn, fid: str) -> list[dict]:
     rows = conn.execute(
-        "SELECT DISTINCT s.id, s.source, s.source_url, s.content, s.observed_at, s.ingested_at "
+        "SELECT DISTINCT s.id, s.source, s.source_url, s.content, s.observed_at, s.ingested_at, "
+        "COALESCE(s.observed_at, s.ingested_at) AS seen_at "
         "FROM signals s LEFT JOIN resolutions r ON r.signal_id = s.id "
         "WHERE s.founder_id = ? OR r.founder_id = ? "
-        "ORDER BY COALESCE(s.observed_at, s.ingested_at) DESC", (fid, fid)).fetchall()
+        "ORDER BY seen_at DESC", (fid, fid)).fetchall()  # Postgres: DISTINCT needs ORDER BY expr in select list
     return [{"id": r["id"], "source": r["source"], "url": r["source_url"],
              "content": r["content"], "observed_at": r["observed_at"] or r["ingested_at"]}
             for r in rows]
